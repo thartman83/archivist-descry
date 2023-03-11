@@ -1,5 +1,5 @@
 ###############################################################################
-#  run.py for archivist descry microservices                                  #
+#  config.py for archivist descry microservices                               #
 #  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -16,23 +16,32 @@
 
 # Module DocString ## {{{
 """
-  Main entry point for the descry microservice
+  Configuration objects for descry
 """
 # }}}
 
-# run # {{{
-import os
-from app import create_app, Configs
 
-if __name__ == "__main__":
-    configType = os.environ.get('configType') or "DEV"
-    config = {}
-    try:
-        config = Configs[configType]()
-    except KeyError:
-        print(f"Unknown configuration type {configType}")
+# config ## {{{
+class AppConfig:  # pylint: disable=too-few-public-methods
+    """
+    Application base configuration object
+    """
+    DEBUG = True
+    TESTING = True
+    ENVIRONMENT = "DEV"
 
-    app = create_app(config)
-    app.run()
+
+class DevConfig(AppConfig):  # pylint: disable=too-few-public-methods
+    """
+    Development Configuration
+    """
+    DEBUG = True
+    TESTING = True
+    ENVIRONMENT = "DEV"
+
+
+Configs = {
+    "DEV": DevConfig
+}
 
 # }}}

@@ -1,5 +1,5 @@
 ###############################################################################
-#  run.py for archivist descry microservices                                  #
+#  __init__.py for archivist descry microservices                             #
 #  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -16,23 +16,13 @@
 
 # Module DocString ## {{{
 """
-  Main entry point for the descry microservice
+  Init module app
 """
 # }}}
 
-# run # {{{
-import os
-from app import create_app, Configs
+# __init__ # {{{
+from .appfactory import create_app
+from .config import Configs
 
-if __name__ == "__main__":
-    configType = os.environ.get('configType') or "DEV"
-    config = {}
-    try:
-        config = Configs[configType]()
-    except KeyError:
-        print(f"Unknown configuration type {configType}")
-
-    app = create_app(config)
-    app.run()
-
+__all__ = ['create_app', 'Configs']
 # }}}
