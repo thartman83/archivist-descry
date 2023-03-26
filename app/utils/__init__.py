@@ -14,14 +14,16 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Module DocString ## {{{
-"""Init module app."""
+# Module DocuString ## {{{
+"""
+   init module for the utility module
+"""
 # }}}
 
 # __init__ # {{{
-from .appfactory import create_app
-from .config import Configs
-from .utils import Desanity
+from .desanity import DesanitySingleton
 
-__all__ = ['create_app', 'Configs', 'Desanity']
+Desanity = DesanitySingleton()
+
+__all__ = ['Desanity']
 # }}}
