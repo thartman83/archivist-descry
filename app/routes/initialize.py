@@ -15,13 +15,12 @@
 ###############################################################################
 
 # Module DocuString ## {{{
-"""
-  initialize route for the descry microservice
-"""
+"""Initialize route for the descry microservice."""
 # }}}
 
 # initialize # {{{
 from flask import Blueprint, request
+from app.utils import Desanity, DesanityException
 # jsonify
 
 init_bp = Blueprint('initialize', __name__, url_prefix='/initialize')
@@ -29,21 +28,25 @@ init_bp = Blueprint('initialize', __name__, url_prefix='/initialize')
 
 @init_bp.route('', methods=['GET'])
 def get_configuration():
-    """
-    Retrive the current configuration for descry
-    """
+    """Retrive the current configuration for descry."""
+    try:
+        Desanity.initialize()
+    except DesanityException:
+        return {
+            'Ok': False,
+            'ErrMsg': """An exception occured while attempting to initialize
+                         the sane environment"""
+        }, 200
+
     return {
-        'Ok': False,
-        'ErrMsg': 'Error, not implemented'
+        'Ok': True,
     }, 200
 
 
 @init_bp.route('', methods=['POST'])
 def set_configuration():
-    """
-    Set the descry configuration
-    """
-    request_data = request.get_json()
+    """Set the descry configuration."""
+#    request_data = request.get_json()
 
     return {
         'Ok': False,

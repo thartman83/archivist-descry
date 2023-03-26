@@ -21,7 +21,6 @@
 # __init__ # {{{
 from .appfactory import create_app
 from .config import Configs
-from .utils import Desanity
 
-__all__ = ['create_app', 'Configs', 'Desanity']
+__all__ = ['create_app', 'Configs']
 # }}}

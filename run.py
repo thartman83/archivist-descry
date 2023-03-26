@@ -15,9 +15,7 @@
 ###############################################################################
 
 # Module DocString ## {{{
-"""
-  Main entry point for the descry microservice
-"""
+"""Main entry point for the descry microservice."""
 # }}}
 
 # run # {{{

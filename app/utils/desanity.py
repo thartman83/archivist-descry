@@ -29,6 +29,11 @@ import sane
 
 
 # desanity # {{{
+
+# typedef the sane exception for easier readability
+SaneError = sane._sane.error
+
+
 class DesanitySingleton():
     """
     Main utilty object providing SANE libray functionality.
@@ -95,23 +100,32 @@ class DesanitySingleton():
 
         try:
             self._open_device = sane.open(filtered_devices[0][0])
-        except e:
-            raise e
+        except SaneError as ex:
+            raise ex
 
         return self._open_device
+
+    @property
+    def device_options(self):
+        """Return the current open device options."""
+        if not self.initialized:
+            raise DesanityException("Not Initialized")
+
+        if self.devices is None:
+            raise DesanityException("No devices found")
+
+        if self._open_device is None:
+            raise DesanityException("Current device not opened")
+
+        return self._open_device.opt
 
     def initialize(self):
         """Initialize SANE engine."""
         if not self.initialized:
             self._sane_version = sane.init()
-            self.initialized = True
+            self._initialized = True
 
         return self.sane_version
-
-    def open_device(self, device_index):
-        """Open a specific scanning device."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
 
 
 class DesanityException(Exception):

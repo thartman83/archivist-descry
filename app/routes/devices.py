@@ -1,6 +1,6 @@
 ###############################################################################
-#  appfactory.py for archivist card catalog microservice                      #
-#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  initialize.py for archivist descry microservices                           #
+#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -14,31 +14,28 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Description {{{
-"""Appfactory pattern implementation."""
+# Module DocuString ## {{{
+"""Routes to configure scanning devices."""
 # }}}
 
-# appfactory # {{{
-from flask import Flask
-from flask_cors import CORS
-from app.routes.devices import devices_bp
-from app.routes.initialize import init_bp
-
-
-def create_app(cfg):
-    """Create an archivist descry application.
-
-    Keyword arguments:
-    cfg -- configuration object
-    """
-    app = Flask(__name__)
-    app.config.from_object(cfg)
-
-    # register the route blueprints
-    app.register_blueprint(devices_bp)
-    app.register_blueprint(init_bp)
-
-    CORS(app)
-
-    return app
+# libraries # {{{
+from flask import Blueprint
+# from flask import request
+from app.utils import Desanity, DesanityException
 # }}}
+
+devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
+
+
+@devices_bp.route('', methods=['GET'])
+def get_devices():
+    """Retrieve a list of devices from the sane."""
+    try:
+        devices = Desanity.devices
+    except DesanityException as ex:
+        raise ex
+
+    return {
+        'Ok': True,
+        'devices': devices
+    }, 200

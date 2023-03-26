@@ -21,9 +21,9 @@
 # }}}
 
 # __init__ # {{{
-from .desanity import DesanitySingleton
+from .desanity import DesanitySingleton, DesanityException
 
 Desanity = DesanitySingleton()
 
-__all__ = ['Desanity']
+__all__ = ['Desanity', 'DesanityException']
 # }}}
