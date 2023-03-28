@@ -19,8 +19,7 @@
 # }}}
 
 # libraries # {{{
-from flask import Blueprint
-# from flask import request
+from flask import Blueprint, request
 from app.utils import Desanity, DesanityException
 # }}}
 
@@ -38,4 +37,41 @@ def get_devices():
     return {
         'Ok': True,
         'devices': devices
+    }, 200
+
+
+@devices_bp.route('device', methods=['PUT'])
+def set_device():
+    """Set the current sane device."""
+    data = request.get_json()
+
+    device_name = data['device_name']
+
+    try:
+        Desanity.device = device_name
+    except DesanityException:
+        return {
+            'Ok': False,
+            'ErrMsg': f'Error setting sane device {device_name}'
+        }, 200
+
+    return {
+        'Ok': True,
+    }, 200
+
+
+@devices_bp.route('device', methods=['GET'])
+def get_device():
+    """Get the current sane device."""
+    try:
+        device = Desanity.device
+    except DesanityException:
+        return {
+            'Ok': False,
+            'ErrMsg': 'Error getting current sane device'
+        }, 200
+
+    return {
+        'Ok': True,
+        'device': device
     }, 200

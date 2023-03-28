@@ -81,16 +81,22 @@ class DesanitySingleton():
         if self._open_device is None:
             raise DesanityException("Current device not opened")
 
-        return self._open_device
+        return {
+            "name": self.device_name,
+            "options": self.device_options,
+            "parameters": self.device_parameters
+        }
 
     @device.setter
-    def open_device(self, device_name):
+    def device(self, device_name):
         """Open a SANE device."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
 
         if self._devices is None:
             devices = self.devices
+        else:
+            devices = self._devices
 
         filtered_devices = list(filter(lambda d: d[0] == device_name,
                                        devices))
@@ -100,10 +106,25 @@ class DesanitySingleton():
 
         try:
             self._open_device = sane.open(filtered_devices[0][0])
+            self._device_name = device_name
         except SaneError as ex:
             raise ex
 
         return self._open_device
+
+    @property
+    def device_name(self):
+        """Return the current open device options."""
+        if not self.initialized:
+            raise DesanityException("Not Initialized")
+
+        if self.devices is None:
+            raise DesanityException("No devices found")
+
+        if self._open_device is None:
+            raise DesanityException("Current device not opened")
+
+        return self._device_name
 
     @property
     def device_options(self):
@@ -117,7 +138,72 @@ class DesanitySingleton():
         if self._open_device is None:
             raise DesanityException("Current device not opened")
 
-        return self._open_device.opt
+        # parse the option tuples
+        options = self._open_device.get_options()
+        ret = []
+        for opt in options:
+            if opt[8] is None:
+                constraints = None
+            elif isinstance(opt[8], tuple):
+                constraints = {
+                    'min': opt[8][0],
+                    'max': opt[8][1],
+                    'step': opt[8][2]
+                }
+            elif isinstance(opt[8], list):
+                constraints = opt[8]
+            else:
+                constraints = None
+
+            if opt[1] is not None:
+                property_name = opt[1].replace('-', '_')
+            else:
+                property_name = None
+
+            if opt[1] is not None:
+                if self._open_device[property_name].is_active():
+                    value = repr(getattr(self._open_device, property_name))
+                else:
+                    value = None
+            else:
+                value = None
+
+            ret.append({
+                'propertyName': property_name,
+                'Name': opt[2],
+                'Description': opt[3],
+                'type': opt[4],
+                'unit': opt[5],
+                'size': opt[6],
+                'cap': opt[7],
+                'constraints': constraints,
+                'value': value
+            })
+
+        return ret
+
+    @property
+    def device_parameters(self):
+        """Return the current open device options."""
+        if not self.initialized:
+            raise DesanityException("Not Initialized")
+
+        if self.devices is None:
+            raise DesanityException("No devices found")
+
+        if self._open_device is None:
+            raise DesanityException("Current device not opened")
+
+        parameters = self._open_device.get_parameters()
+
+        return {
+            'format': parameters[0],
+            'last_frame': parameters[1],
+            'pixelPerLine': parameters[2][0],
+            'lines': parameters[2][1],
+            'depth': parameters[3],
+            'bytes_per_line': parameters[4]
+        }
 
     def initialize(self):
         """Initialize SANE engine."""
