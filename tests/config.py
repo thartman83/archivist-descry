@@ -1,6 +1,6 @@
 ###############################################################################
-#  __init__.py for archivist descry microservices                             #
-#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  config.py for archivist descry microservice tests                          #
+#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -14,12 +14,33 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Module DocuString ## {{{
-"""Init module for the utility module."""
+# Commentary {{{
+"""Default test configuration."""
 # }}}
 
-# __init__ # {{{
-from .desanity import desanity, DesanityException
+# config {{{
+from app.config import AppConfig
 
-__all__ = ['desanity', 'DesanityException']
+
+class TestConfig(AppConfig):  # pylint: disable=too-few-public-methods
+    """Configuration object for running card catalog unit tests."""
+
+    dbEngine = "sqlite"
+    dbHost = "localhost"
+    dbName = "card-catalog"
+    dbUser = ""
+    dbPasswd = ""
+
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+# example sane devices
+sane_devices = {
+    "blank": [],
+    "brother": ("brother4:net1;dev0", "Brother", "*MFC-L2700DW",
+                "BROTHER_MFC-L2700DW_series"),
+    "camera": ("v4l:/dev/video0", "Noname", "Integrated Camera: Integrated C",
+               "virtual device")
+}
 # }}}

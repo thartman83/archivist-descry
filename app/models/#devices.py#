@@ -1,6 +1,6 @@
 ###############################################################################
-#  __init__.py for archivist descry microservices                             #
-#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  shelf.py for archivist descry microservice models                          #
+#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -14,12 +14,16 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Module DocuString ## {{{
-"""Init module for the utility module."""
+# Commentary {{{
+"""Define enabled SANE devices."""
 # }}}
 
-# __init__ # {{{
-from .desanity import desanity, DesanityException
+# libraries {{{
+from .dbbase import db
+# }}}
 
-__all__ = ['desanity', 'DesanityException']
+# devices {{{
+class Devices(db.Model):
+    """Enabled SANE device sql models. ""
+    __table_args__ = {"mysql_engine": "InnoDB"}
 # }}}

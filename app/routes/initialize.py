@@ -19,8 +19,8 @@
 # }}}
 
 # initialize # {{{
-from flask import Blueprint, request
-from app.utils import Desanity, DesanityException
+from flask import Blueprint
+from app.utils import desanity, DesanityException
 # jsonify
 
 init_bp = Blueprint('initialize', __name__, url_prefix='/initialize')
@@ -30,7 +30,7 @@ init_bp = Blueprint('initialize', __name__, url_prefix='/initialize')
 def get_configuration():
     """Retrive the current configuration for descry."""
     try:
-        Desanity.initialize()
+        desanity.initialize()
     except DesanityException:
         return {
             'Ok': False,

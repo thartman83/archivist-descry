@@ -20,7 +20,7 @@
 
 # libraries # {{{
 from flask import Blueprint, request
-from app.utils import Desanity, DesanityException
+from app.utils import desanity, DesanityException
 # }}}
 
 devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
@@ -30,7 +30,7 @@ devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
 def get_devices():
     """Retrieve a list of devices from the sane."""
     try:
-        devices = Desanity.devices
+        devices = desanity.devices
     except DesanityException as ex:
         raise ex
 
@@ -48,7 +48,7 @@ def set_device():
     device_name = data['device_name']
 
     try:
-        Desanity.device = device_name
+        desanity.device = device_name
     except DesanityException:
         return {
             'Ok': False,
@@ -64,7 +64,7 @@ def set_device():
 def get_device():
     """Get the current sane device."""
     try:
-        device = Desanity.device
+        device = desanity.device
     except DesanityException:
         return {
             'Ok': False,

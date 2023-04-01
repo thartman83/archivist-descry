@@ -1,6 +1,6 @@
 ###############################################################################
-#  __init__.py for archivist descry microservices                             #
-#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  dbbase.py for Archivist descry microservice                                #
+#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -14,12 +14,15 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Module DocuString ## {{{
-"""Init module for the utility module."""
+# Commentary {{{
+"""
+Base db class for card catalog models
+"""
 # }}}
 
-# __init__ # {{{
-from .desanity import desanity, DesanityException
+# dbbase ## {{{
+from flask_sqlalchemy import SQLAlchemy
 
-__all__ = ['desanity', 'DesanityException']
+db = SQLAlchemy()
+
 # }}}

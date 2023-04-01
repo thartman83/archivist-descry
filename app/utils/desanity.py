@@ -34,19 +34,15 @@ import sane
 SaneError = sane._sane.error
 
 
-class DesanitySingleton():
-    """
-    Main utilty object providing SANE libray functionality.
-
-    This object is built as a singleton for the rest of the microservice.
-    """
+class Desanity():
+    """Main utilty object providing SANE libray functionality."""
 
     def __init__(self):
         """Construct for the Desanity object."""
         self._initialized = False
         self._sane_version = None
-        self._devices = None
-        self._open_device = None
+        self._devices = []
+        self._open_devices = {}
         self._parameters = None
 
     @property
@@ -65,7 +61,8 @@ class DesanitySingleton():
         if not self.initialized:
             raise DesanityException("Not Initialized")
 
-        self._devices = sane.get_devices()
+        if self._devices is None:
+            self.refresh_devices()
 
         return self._devices
 
@@ -205,16 +202,39 @@ class DesanitySingleton():
             'bytes_per_line': parameters[4]
         }
 
+    @property
+    def open_devices(self):
+        """Return the current open devices as a list of their keys."""
+        return self._open_devices.keys()
+
     def initialize(self):
         """Initialize SANE engine."""
-        if not self.initialized:
-            self._sane_version = sane.init()
-            self._initialized = True
+        self._sane_version = sane.init()
+        self._initialized = True
+        self._devices = []
 
         return self.sane_version
+
+    def refresh_devices(self):
+        """Refresh/get the list of sane devices."""
+        self._devices = sane.get_devices()
+
+        return self._devices
+
+    def open_device(self, device_name):
+        """Open a sane device."""
+        if not self.initialized:
+            raise DesanityException("Not initialized")
+
+        if device_name not in list(map(lambda device: device[0], self._devices)):
+            raise DesanityException(f"Unknown device {device_name}")
+
+        self._open_devices[device_name] = sane.open(device_name)
 
 
 class DesanityException(Exception):
     """Raise when a SANE issue occurs."""
 
+
+desanity = Desanity()
 # }}}

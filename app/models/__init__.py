@@ -1,6 +1,6 @@
 ###############################################################################
-#  __init__.py for archivist descry microservices                             #
-#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  __init__.py for archivist descry microservice models                       #
+#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -12,14 +12,15 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of             #
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              #
 #  GNU General Public License for more details.                               #
-###############################################################################
+i###############################################################################
 
-# Module DocuString ## {{{
-"""Init module for the utility module."""
+# Commentary {{{
+"""Models module init file."""
 # }}}
 
-# __init__ # {{{
-from .desanity import desanity, DesanityException
+# __init__ ## {{{
+from .devices import Devices
+from .deviceOptions import DeviceOptions
 
-__all__ = ['desanity', 'DesanityException']
+__all__ = ["Devices", "DeviceOptions"]
 # }}}
