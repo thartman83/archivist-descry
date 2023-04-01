@@ -41,7 +41,7 @@ class Desanity():
         """Construct for the Desanity object."""
         self._initialized = False
         self._sane_version = None
-        self._devices = []
+        self._devices = None
         self._open_devices = {}
         self._parameters = None
 
@@ -211,7 +211,7 @@ class Desanity():
         """Initialize SANE engine."""
         self._sane_version = sane.init()
         self._initialized = True
-        self._devices = []
+        self._devices = None
 
         return self.sane_version
 
@@ -226,7 +226,11 @@ class Desanity():
         if not self.initialized:
             raise DesanityException("Not initialized")
 
-        if device_name not in list(map(lambda device: device[0], self._devices)):
+        if self._devices is None:
+            self.refresh_devices()
+
+        if device_name not in list(map(lambda device: device[0],
+                                       self._devices)):
             raise DesanityException(f"Unknown device {device_name}")
 
         self._open_devices[device_name] = sane.open(device_name)

@@ -47,7 +47,7 @@ def test_initialized():
     WHEN desanity isn't initialized
     SHOULD return False when Initialized is called
     """
-    assert not desanity.initialize()
+    assert not desanity.initialized
 
 
 @mock.patch.object(sane, "get_devices")
