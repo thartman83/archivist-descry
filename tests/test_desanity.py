@@ -141,4 +141,4 @@ def test_open_device(mock_open, mock_devices):
 
     desanity.refresh_devices()
     desanity.open_device(device_name)
-    assert "brother4:net1;dev0" in desanity.open_devices
+    assert "brother4:net1;dev0" in desanity.open_devices()

@@ -66,8 +66,7 @@ class Desanity():
 
         return self._devices
 
-    @property
-    def device(self):
+    def get_device(self, device_name):
         """Return the current open device."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
@@ -75,68 +74,53 @@ class Desanity():
         if self.devices is None:
             raise DesanityException("No devices found")
 
-        if self._open_device is None:
-            raise DesanityException("Current device not opened")
+        if device_name not in self.open_devices():
+            raise DesanityException(f"Device '{device_name}' is not opened")
 
         return {
-            "name": self.device_name,
-            "options": self.device_options,
-            "parameters": self.device_parameters
+            "name": device_name,
+            "options": self.device_options(device_name),
+            "parameters": self.device_parameters(device_name)
         }
 
-    @device.setter
-    def device(self, device_name):
-        """Open a SANE device."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
+    # def device(self, device_name):
+    #     """Open a SANE device."""
+    #     if not self.initialized:
+    #         raise DesanityException("Not Initialized")
 
-        if self._devices is None:
-            devices = self.devices
-        else:
-            devices = self._devices
+    #     if self._devices is None:
+    #         devices = self.refresh_devices()
+    #     else:
+    #         devices = self._devices
 
-        filtered_devices = list(filter(lambda d: d[0] == device_name,
-                                       devices))
+    #     filtered_devices = list(filter(lambda d: d[0] == device_name,
+    #                                    devices))
 
-        if len(filtered_devices) < 0:
-            raise DesanityException(f"Unknown device: {device_name}")
+    #     if len(filtered_devices) < 0:
+    #         raise DesanityException(f"Unknown device: {device_name}")
 
-        try:
-            self._open_device = sane.open(filtered_devices[0][0])
-            self._device_name = device_name
-        except SaneError as ex:
-            raise ex
+    #     try:
+    #         self._open_device = sane.open(filtered_devices[0][0])
+    #         self._device_name = device_name
+    #     except SaneError as ex:
+    #         raise ex
 
-        return self._open_device
+    #     return self._open_device
 
-    @property
-    def device_name(self):
-        """Return the current open device options."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self.devices is None:
-            raise DesanityException("No devices found")
-
-        if self._open_device is None:
-            raise DesanityException("Current device not opened")
-
-        return self._device_name
-
-    @property
-    def device_options(self):
-        """Return the current open device options."""
+    def device_options(self, device_name):
+        """Return the options available for a given device_name."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
 
         if self.devices is None:
             raise DesanityException("No devices found")
 
-        if self._open_device is None:
-            raise DesanityException("Current device not opened")
+        if device_name not in self.open_devices():
+            raise DesanityException(f"Device {device_name} not opened")
 
         # parse the option tuples
-        options = self._open_device.get_options()
+        dev = self._open_devices[device_name]
+        options = dev.get_options()
         ret = []
         for opt in options:
             if opt[8] is None:
@@ -158,8 +142,8 @@ class Desanity():
                 property_name = None
 
             if opt[1] is not None:
-                if self._open_device[property_name].is_active():
-                    value = repr(getattr(self._open_device, property_name))
+                if dev[property_name].is_active():
+                    value = repr(getattr(dev, property_name))
                 else:
                     value = None
             else:
@@ -179,8 +163,7 @@ class Desanity():
 
         return ret
 
-    @property
-    def device_parameters(self):
+    def device_parameters(self, device_name):
         """Return the current open device options."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
@@ -188,10 +171,10 @@ class Desanity():
         if self.devices is None:
             raise DesanityException("No devices found")
 
-        if self._open_device is None:
-            raise DesanityException("Current device not opened")
+        if device_name not in self.open_devices():
+            raise DesanityException(f"Device {device_name} not opened")
 
-        parameters = self._open_device.get_parameters()
+        parameters = self._open_devices[device_name].get_parameters()
 
         return {
             'format': parameters[0],
@@ -201,11 +184,6 @@ class Desanity():
             'depth': parameters[3],
             'bytes_per_line': parameters[4]
         }
-
-    @property
-    def open_devices(self):
-        """Return the current open devices as a list of their keys."""
-        return self._open_devices.keys()
 
     def initialize(self):
         """Initialize SANE engine."""
@@ -229,11 +207,20 @@ class Desanity():
         if self._devices is None:
             self.refresh_devices()
 
-        if device_name not in list(map(lambda device: device[0],
-                                       self._devices)):
+        if device_name not in self.open_devices():
             raise DesanityException(f"Unknown device {device_name}")
 
         self._open_devices[device_name] = sane.open(device_name)
+
+    def open_devices(self):
+        """Return the list of open devices within desanity."""
+        if not self.initialized:
+            raise DesanityException("Not initialized")
+
+        if self._devices is None:
+            self.refresh_devices()
+
+        return list(map(lambda device: device[0], self._devices))
 
 
 class DesanityException(Exception):
