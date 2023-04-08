@@ -145,8 +145,10 @@ def test_open_device(mock_open, mock_devices):
     assert "brother4:net1;dev0" in desanity.open_devices()
 
 
+@mock.patch.object(sane, "get_devices")
+@mock.patch.object(sane, "open")
 @mock.patch.object(desanity, "open_devices")
-def test_device_options(mock_open_devices):
+def test_device_options(mock_open_devices, mock_open, mock_devices):
     """
     GIVEN an initialized desanity object
     GIVEN sane device found
@@ -154,7 +156,11 @@ def test_device_options(mock_open_devices):
     SHOULD return a parsed set of device options
     """
     desanity.initialize()
+    mock_devices.return_value = [sane_devices["brother"]]
     mock_open_devices.return_value = {"brother": MockBrotherDev()}
+    device_name = "brother4:net1;dev0"
+    mock_open.return_value = device_name
+
     parsed_options = desanity.device_options("brother")
 
     assert len(parsed_options) == 8
