@@ -22,6 +22,7 @@ import random
 import sane
 from app.utils import desanity, DesanityException
 from .config import sane_devices
+from .mocks import MockBrotherDev
 
 
 def test_get_devices_no_init():
@@ -142,3 +143,18 @@ def test_open_device(mock_open, mock_devices):
     desanity.refresh_devices()
     desanity.open_device(device_name)
     assert "brother4:net1;dev0" in desanity.open_devices()
+
+
+@mock.patch.object(desanity, "open_devices")
+def test_device_options(mock_open_devices):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN device_options is called with an existing device
+    SHOULD return a parsed set of device options
+    """
+    desanity.initialize()
+    mock_open_devices.return_value = {"brother": MockBrotherDev()}
+    parsed_options = desanity.device_options("brother")
+
+    assert len(parsed_options) == 8

@@ -24,6 +24,7 @@ a singleton object.
 # }}}
 
 # libraires {{{
+from enum import IntEnum
 import sane
 # }}}
 
@@ -32,6 +33,30 @@ import sane
 
 # typedef the sane exception for easier readability
 SaneError = sane._sane.error
+
+
+# options enums
+class DevOptions(IntEnum):
+    """Sane device enumeration."""
+
+    PROP_NAME = 1
+    NAME = 2
+    DESCRIPTION = 3
+    TYPE = 4
+    UNIT = 5
+    SIZE = 6
+    CAP = 7
+    CONSTRAINTS = 8
+
+
+class DevParams(IntEnum):
+    """Sane device parameters."""
+
+    FORMAT = 0
+    LAST_FRAME = 1
+    RESOLUTION = 2
+    DEPTH = 3
+    BYTES_PER_LINE = 4
 
 
 class Desanity():
@@ -83,32 +108,8 @@ class Desanity():
             "parameters": self.device_parameters(device_name)
         }
 
-    # def device(self, device_name):
-    #     """Open a SANE device."""
-    #     if not self.initialized:
-    #         raise DesanityException("Not Initialized")
-
-    #     if self._devices is None:
-    #         devices = self.refresh_devices()
-    #     else:
-    #         devices = self._devices
-
-    #     filtered_devices = list(filter(lambda d: d[0] == device_name,
-    #                                    devices))
-
-    #     if len(filtered_devices) < 0:
-    #         raise DesanityException(f"Unknown device: {device_name}")
-
-    #     try:
-    #         self._open_device = sane.open(filtered_devices[0][0])
-    #         self._device_name = device_name
-    #     except SaneError as ex:
-    #         raise ex
-
-    #     return self._open_device
-
     def device_options(self, device_name):
-        """Return the options available for a given device_name."""
+        """Return the options available for device {device_name}."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
 
@@ -119,52 +120,34 @@ class Desanity():
             raise DesanityException(f"Device {device_name} not opened")
 
         # parse the option tuples
-        dev = self._open_devices[device_name]
+        dev = self.open_devices()[device_name]
         options = dev.get_options()
         ret = []
         for opt in options:
-            if opt[8] is None:
-                constraints = None
-            elif isinstance(opt[8], tuple):
-                constraints = {
-                    'min': opt[8][0],
-                    'max': opt[8][1],
-                    'step': opt[8][2]
-                }
-            elif isinstance(opt[8], list):
-                constraints = opt[8]
-            else:
-                constraints = None
+            # parse the constraints option
+            constraints = self._parse_constraints(
+                opt[DevOptions.CONSTRAINTS])
 
-            if opt[1] is not None:
-                property_name = opt[1].replace('-', '_')
-            else:
-                property_name = None
-
-            if opt[1] is not None:
-                if dev[property_name].is_active():
-                    value = repr(getattr(dev, property_name))
-                else:
-                    value = None
-            else:
-                value = None
+            # parse the property name and value
+            prop_name, prop_value = self._parse_name_value(
+                opt[DevOptions.PROP_NAME], dev)
 
             ret.append({
-                'propertyName': property_name,
-                'Name': opt[2],
-                'Description': opt[3],
-                'type': opt[4],
-                'unit': opt[5],
-                'size': opt[6],
-                'cap': opt[7],
+                'propertyName': prop_name,
+                'Name': opt[DevOptions.NAME],
+                'Description': opt[DevOptions.DESCRIPTION],
+                'type': opt[DevOptions.TYPE],
+                'unit': opt[DevOptions.UNIT],
+                'size': opt[DevOptions.SIZE],
+                'cap': opt[DevOptions.CAP],
                 'constraints': constraints,
-                'value': value
+                'value': prop_value
             })
 
         return ret
 
     def device_parameters(self, device_name):
-        """Return the current open device options."""
+        """Return the device parameters for device {device_name}."""
         if not self.initialized:
             raise DesanityException("Not Initialized")
 
@@ -174,15 +157,15 @@ class Desanity():
         if device_name not in self.open_devices():
             raise DesanityException(f"Device {device_name} not opened")
 
-        parameters = self._open_devices[device_name].get_parameters()
+        parameters = self.open_devices()[device_name].get_parameters()
 
         return {
-            'format': parameters[0],
-            'last_frame': parameters[1],
-            'pixelPerLine': parameters[2][0],
-            'lines': parameters[2][1],
-            'depth': parameters[3],
-            'bytes_per_line': parameters[4]
+            'format': parameters[DevParams.FORMAT],
+            'last_frame': parameters[DevParams.LAST_FRAME],
+            'pixelPerLine': parameters[DevParams.RESOLUTION][0],
+            'lines': parameters[DevParams.RESOLUTION][1],
+            'depth': parameters[DevParams.DEPTH],
+            'bytes_per_line': parameters[DevParams.BYTES_PER_LINE]
         }
 
     def initialize(self):
@@ -221,6 +204,38 @@ class Desanity():
             self.refresh_devices()
 
         return list(map(lambda device: device[0], self._devices))
+
+    def _parse_constraints(self, opt):
+        """Return the constraits for the given option."""
+        if opt is None:
+            constraints = None
+        elif isinstance(opt, tuple):
+            constraints = {
+                'min': opt[0],
+                'max': opt[1],
+                'step': opt[2]
+            }
+        elif isinstance(opt, list):
+            constraints = opt
+        else:
+            constraints = None
+
+        return constraints
+
+    def _parse_name_value(self, opt, dev):
+        """Parse the property name and value from the option."""
+        if opt is not None:
+            property_name = opt.replace('-', '_')
+
+            if dev[property_name].is_active():
+                value = repr(getattr(dev, property_name))
+            else:
+                value = None
+        else:
+            property_name = None
+            value = None
+
+        return property_name, value
 
 
 class DesanityException(Exception):
