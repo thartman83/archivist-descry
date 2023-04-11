@@ -146,6 +146,26 @@ class Desanity():
 
         return ret
 
+    def set_device_option(self, device_name, option_name, value):
+        """Set a SAne device option."""
+        if not self.initialized:
+            raise DesanityException("Not Initialized")
+
+        if self.devices is None:
+            raise DesanityException("No devices found")
+
+        if device_name not in self.open_devices():
+            raise DesanityException(f"Device {device_name} not opened")
+
+        dev = self._devices['device_name']
+
+        if option_name not in list(map(lambda opt: opt[DevOptions.PROP_NAME],
+                                       self.device_options(device_name))):
+            raise DesanityException(f"Option {option_name} not found for"
+                                    "device {device_name}")
+
+        dev.setattr(option_name, value)
+
     def device_parameters(self, device_name):
         """Return the device parameters for device {device_name}."""
         if not self.initialized:

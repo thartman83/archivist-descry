@@ -60,7 +60,12 @@ class MockBrotherDev():
 
     def __getitem__(self, item):
         """Return property."""
-        return MockBrotherDevProperty()
+        attr = next(filter(lambda x: x[1] == item, brother_options), None)
+        value = None
+        if attr is not None:
+            setattr(self, item, value)
+
+        return MockBrotherDevProperty(attr is not None)
 
     def get_options(self):
         """Return mock device options."""
@@ -74,8 +79,16 @@ class MockBrotherDev():
 class MockBrotherDevProperty():
     """A mocked sane dev property object."""
 
+    def __init__(self, active):
+        """Initializatize the object."""
+        self.active = active
+
     def is_active(self):
         """Return if the given property is active or not."""
+        return self.active
+
+    def another_func(self):
+        """Another function that exits."""
         return True
 
 # }}}
