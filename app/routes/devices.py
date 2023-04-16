@@ -29,34 +29,49 @@ devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
 @devices_bp.route('', methods=['GET'])
 def get_devices():
     """Retrieve a list of devices from the sane."""
-    try:
-        devices = desanity.devices
-    except DesanityException as ex:
-        raise ex
+    req = None if not request.is_json else request.get_json()
+    no_cache = False
 
+    if req is not None and req.has_key('no_cache'):
+        no_cache = bool(req['no_cache'])
+
+    # try to get the devices throw a internal server error if it fails
+    try:
+        if no_cache:
+            devices = desanity.devices
+        else:
+            devices = desanity.refresh_devices()
+
+    except DesanityException as ex:
+        return {
+            'Ok': False,
+            'ErrMsg': f"An error occured while getting devices: {ex}"
+        }, 500
+
+    # return the devices returned by desanity
     return {
         'Ok': True,
         'devices': devices
     }, 200
 
 
-@devices_bp.route('device', methods=['PUT'])
-def set_device():
-    """Set the current sane device."""
-    data = request.get_json()
-
-    device_name = data['device_name']
-
+@devices_bp.route('/open', methods=['POST'])
+def open_device():
+    """Open a SANE device within Descry."""
     try:
-        desanity.device = device_name
+        data = request.get_json()
+        device_name = data['device_name']
+
+        desanity.open_device(device_name)
     except DesanityException:
         return {
             'Ok': False,
-            'ErrMsg': f'Error setting sane device {device_name}'
+            'ErrMsg': f'Error opening sane device {device_name}'
         }, 200
 
     return {
         'Ok': True,
+        'device': device_name
     }, 200
 
 

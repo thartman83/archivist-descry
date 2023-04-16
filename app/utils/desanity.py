@@ -215,6 +215,8 @@ class Desanity():
 
         self._open_devices[device_name] = sane.open(device_name)
 
+        return self._open_devices[device_name]
+
     def open_devices(self):
         """Return the list of open devices within desanity."""
         if not self.initialized:

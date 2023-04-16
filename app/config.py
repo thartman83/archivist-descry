@@ -15,33 +15,38 @@
 ###############################################################################
 
 # Module DocString ## {{{
-"""
-  Configuration objects for descry
-"""
+"""Configuration objects for descry."""
 # }}}
 
 
 # config ## {{{
 class AppConfig:  # pylint: disable=too-few-public-methods
-    """
-    Application base configuration object
-    """
+    """Application base configuration object."""
+
     DEBUG = True
     TESTING = True
     ENVIRONMENT = "DEV"
 
 
 class DevConfig(AppConfig):  # pylint: disable=too-few-public-methods
-    """
-    Development Configuration
-    """
+    """Development configuration."""
+
     DEBUG = True
     TESTING = True
     ENVIRONMENT = "DEV"
 
 
+class TestConfig(AppConfig):  # pylint: disable=too-few-public-methods
+    """Configuration unit and functional testing."""
+
+    DEBUG = True
+    TESTING = True
+    ENVIRONMENT = "TESTING"
+
+
 Configs = {
-    "DEV": DevConfig
+    "DEV": DevConfig,
+    "TESTING": TestConfig
 }
 
 # }}}

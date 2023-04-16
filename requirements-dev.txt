@@ -3,6 +3,7 @@ Flask-Cors==3.0.10
 Flask-SQLAlchemy==3.0.3
 pytest==7.2.0
 pytest-cov==2.11.1
+pytest-mock==3.10.0
 python-dotenv==0.21.0
 python-lsp-server[all]
 python-sane==2.9.1
