@@ -1,5 +1,5 @@
 ###############################################################################
-#  appfactory.py for archivist card catalog microservice                      #
+#  docs.py for archivist card catalog microservice                            #
 #  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -15,42 +15,20 @@
 ###############################################################################
 
 # Description {{{
-"""Appfactory pattern implementation."""
+"""Swagger documentation route."""
 # }}}
 
 # appfactory # {{{
-from flask import Flask, jsonify
-from flask_swagger import swagger
-from flask_cors import CORS
-from app.routes.devices import devices_bp
-from app.routes.initialize import init_bp
-from app.routes.docs import swaggerui_bp
+from flask_swagger_ui import get_swaggerui_blueprint
 
+SWAGGER_URL = '/api/docs'
+API_URL = '/api/spec'
 
-def create_app(cfg):
-    """Create an archivist descry application.
-
-    Keyword arguments:
-    cfg -- configuration object
-    """
-    app = Flask(__name__)
-    app.config.from_object(cfg)
-
-    # register the route blueprints
-    app.register_blueprint(devices_bp)
-    app.register_blueprint(init_bp)
-    app.register_blueprint(swaggerui_bp)
-
-    # Add swagger
-    @app.route('/api/spec')
-    def spec():
-        swag = swagger(app)
-        swag['info']['version'] = "0.1"
-        swag['info']['title'] = "Descry"
-        swag['info']['description'] = "Scanning microservice"
-        return jsonify(swag)
-
-    CORS(app)
-
-    return app
-# }}}
+# Call factory function to create our blueprint
+swaggerui_bp = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "Descry"
+    }
+)

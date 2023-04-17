@@ -28,7 +28,16 @@ devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
 
 @devices_bp.route('', methods=['GET'])
 def get_devices():
-    """Retrieve a list of devices from the sane."""
+    """
+    Retrieve a list of devices from the sane.
+
+    ---
+    tags:
+      - devices
+    responses:
+      200:
+        description: A list of devices
+    """
     req = None if not request.is_json else request.get_json()
     no_cache = False
 
@@ -57,7 +66,22 @@ def get_devices():
 
 @devices_bp.route('/open', methods=['POST'])
 def open_device():
-    """Open a SANE device within Descry."""
+    """
+    Open a SANE device within Descry.
+
+    ---
+    tags:
+      - devices
+    parameters:
+      - name: device_name
+        in: body
+        description: Name of device to open
+        required: true
+        type: string
+    responses:
+      200:
+         description: Device is opened
+    """
     try:
         data = request.get_json()
         device_name = data['device_name']
@@ -75,9 +99,24 @@ def open_device():
     }, 200
 
 
-@devices_bp.route('device', methods=['GET'])
-def get_device():
-    """Get the current sane device."""
+@devices_bp.route('/<string:device>', methods=['GET'])
+def get_device(device_name):
+    """
+    Get the current sane device.
+
+    ---
+    tags:
+      - devices
+    parameters:
+      - name: device_name
+        in: path
+        description: name of device to get the information from
+        required: true
+        type: string
+    responses:
+      200:
+        description: Return information about the device
+    """
     try:
         device = desanity.device
     except DesanityException:

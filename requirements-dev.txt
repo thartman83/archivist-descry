@@ -7,3 +7,5 @@ pytest-mock==3.10.0
 python-dotenv==0.21.0
 python-lsp-server[all]
 python-sane==2.9.1
+flask-swagger==0.2.14
+flask-swagger-ui==4.11.1
