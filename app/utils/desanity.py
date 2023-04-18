@@ -64,16 +64,12 @@ class Desanity():
 
     def __init__(self):
         """Construct for the Desanity object."""
-        self._initialized = False
         self._sane_version = None
-        self._devices = None
+        self._devices = []
         self._open_devices = {}
         self._parameters = None
 
-    @property
-    def initialized(self):
-        """Return if Desanity has been initialized."""
-        return self._initialized
+        sane.init()
 
     @property
     def sane_version(self):
@@ -81,43 +77,16 @@ class Desanity():
         return self._sane_version
 
     @property
-    def devices(self):
+    def available_devices(self):
         """Return the list of devices from SANE."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self._devices is None:
+        if not self._devices:
             self.refresh_devices()
-
-        return self._devices
-
-    def get_device(self, device_name):
-        """Return the current open device."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self.devices is None:
-            raise DesanityException("No devices found")
-
-        if device_name not in self.open_devices():
-            raise DesanityException(f"Device '{device_name}' is not opened")
-
-        return {
-            "name": device_name,
-            "options": self.device_options(device_name),
-            "parameters": self.device_parameters(device_name)
-        }
+        return list(map(lambda device: device[0], self._devices))
 
     def device_options(self, device_name):
         """Return the options available for device {device_name}."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self.devices is None:
-            raise DesanityException("No devices found")
-
         if device_name not in self.open_devices():
-            raise DesanityException(f"Device {device_name} not opened")
+            raise DesanityUnknownDev(f"Device {device_name} not opened")
 
         # parse the option tuples
         dev = self.open_devices()[device_name]
@@ -148,14 +117,8 @@ class Desanity():
 
     def set_device_option(self, device_name, option_name, value):
         """Set a SAne device option."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self.devices is None:
-            raise DesanityException("No devices found")
-
         if device_name not in self.open_devices():
-            raise DesanityException(f"Device {device_name} not opened")
+            raise DesanityUnknownDev(f"Device {device_name} not opened")
 
         dev = self._devices['device_name']
 
@@ -168,14 +131,8 @@ class Desanity():
 
     def device_parameters(self, device_name):
         """Return the device parameters for device {device_name}."""
-        if not self.initialized:
-            raise DesanityException("Not Initialized")
-
-        if self.devices is None:
-            raise DesanityException("No devices found")
-
         if device_name not in self.open_devices():
-            raise DesanityException(f"Device {device_name} not opened")
+            raise DesanityUnknownDev(f"Device {device_name} not opened")
 
         parameters = self.open_devices()[device_name].get_parameters()
 
@@ -190,9 +147,10 @@ class Desanity():
 
     def initialize(self):
         """Initialize SANE engine."""
-        self._sane_version = sane.init()
-        self._initialized = True
-        self._devices = None
+        self._sane_version = None
+        self._devices = []
+        self._open_devices = {}
+        self._parameters = None
 
         return self.sane_version
 
@@ -202,30 +160,31 @@ class Desanity():
 
         return self._devices
 
-    def open_device(self, device_name):
+    def open_device(self, device_name, common_name=None):
         """Open a sane device."""
-        if not self.initialized:
-            raise DesanityException("Not initialized")
-
-        if self._devices is None:
+        if not self._devices:
             self.refresh_devices()
 
-        if device_name not in self.open_devices():
-            raise DesanityException(f"Unknown device {device_name}")
+        if common_name is None:
+            common_name = self._replace_url_characters(device_name)
 
-        self._open_devices[device_name] = sane.open(device_name)
+        if device_name not in self.available_devices:
+            raise DesanityUnknownDev(f"Unknown device {device_name}")
 
-        return self._open_devices[device_name]
+        # if the device is already opened just return the common name
+        if common_name in self._open_devices:
+            return common_name
+
+        self._open_devices[common_name] = sane.open(device_name)
+
+        return common_name
 
     def open_devices(self):
         """Return the list of open devices within desanity."""
-        if not self.initialized:
-            raise DesanityException("Not initialized")
+        if self._open_devices is None:
+            return []
 
-        if self._devices is None:
-            self.refresh_devices()
-
-        return list(map(lambda device: device[0], self._devices))
+        return self._open_devices.keys()
 
     def _parse_constraints(self, opt):
         """Return the constraits for the given option."""
@@ -259,9 +218,24 @@ class Desanity():
 
         return property_name, value
 
+    def _replace_url_characters(self, url_string):
+        """Replace illegal url characters with an undescore."""
+        retval = url_string
+        illegal_chars = [";", "/", "?", ":", "@", "&",
+                         "=", "+", "$", ",", "{", "}",
+                         ",", '"', "^", "[", "]", "`"]
+        for char in illegal_chars:
+            retval = retval.replace(char, '_')
+
+        return retval
+
 
 class DesanityException(Exception):
     """Raise when a SANE issue occurs."""
+
+
+class DesanityUnknownDev(DesanityException):
+    """Unknown device referenced."""
 
 
 desanity = Desanity()

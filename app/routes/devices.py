@@ -20,7 +20,7 @@
 
 # libraries # {{{
 from flask import Blueprint, request
-from app.utils import desanity, DesanityException
+from app.utils import desanity, DesanityUnknownDev, DesanityException
 # }}}
 
 devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
@@ -29,7 +29,7 @@ devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
 @devices_bp.route('', methods=['GET'])
 def get_devices():
     """
-    Retrieve a list of devices from the sane.
+    Retrieve a list of available devices from the sane.
 
     ---
     tags:
@@ -37,6 +37,8 @@ def get_devices():
     responses:
       200:
         description: A list of devices
+      500:
+        description: Error occured while getting a list of available devices
     """
     req = None if not request.is_json else request.get_json()
     no_cache = False
@@ -47,19 +49,17 @@ def get_devices():
     # try to get the devices throw a internal server error if it fails
     try:
         if no_cache:
-            devices = desanity.devices
+            devices = desanity.available_devices
         else:
             devices = desanity.refresh_devices()
 
     except DesanityException as ex:
         return {
-            'Ok': False,
             'ErrMsg': f"An error occured while getting devices: {ex}"
         }, 500
 
     # return the devices returned by desanity
     return {
-        'Ok': True,
         'devices': devices
     }, 200
 
@@ -79,28 +79,28 @@ def open_device():
         required: true
         type: string
     responses:
-      200:
+      201:
          description: Device is opened
+      404:
+         description: Device not found
     """
     try:
         data = request.get_json()
         device_name = data['device_name']
 
-        desanity.open_device(device_name)
-    except DesanityException:
+        device_id = desanity.open_device(device_name)
+    except DesanityUnknownDev:
         return {
-            'Ok': False,
-            'ErrMsg': f'Error opening sane device {device_name}'
-        }, 200
+            'ErrMsg': f'Sane device {device_name} not found'
+        }, 404
 
     return {
-        'Ok': True,
-        'device': device_name
-    }, 200
+        'device_id': device_id
+    }, 201
 
 
-@devices_bp.route('/<string:device>', methods=['GET'])
-def get_device(device_name):
+@devices_bp.route('/<string:device_id>', methods=['GET'])
+def get_device(device_id):
     """
     Get the current sane device.
 
@@ -116,16 +116,16 @@ def get_device(device_name):
     responses:
       200:
         description: Return information about the device
+      404:
+        description: Device not found
     """
     try:
-        device = desanity.device
-    except DesanityException:
+        device = desanity.available_devices[device_id]
+    except DesanityUnknownDev:
         return {
-            'Ok': False,
-            'ErrMsg': 'Error getting current sane device'
-        }, 200
+            'ErrMsg': f'Sane device {device_id} not found or not open'
+        }, 404
 
     return {
-        'Ok': True,
-        'device': device
+        device
     }, 200

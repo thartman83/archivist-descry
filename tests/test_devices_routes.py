@@ -54,7 +54,6 @@ def test_get_devices(test_client, mocker):
     resp = test_client.get('/devices')
 
     assert resp.status_code == 200
-    assert resp.json['Ok']
 
 
 def test_get_devices_no_cache(test_client, mocker):
@@ -69,7 +68,6 @@ def test_get_devices_no_cache(test_client, mocker):
     resp = test_client.get('/devices', data={" no_cache": True})
 
     assert resp.status_code == 200
-    assert resp.json['Ok']
 
 
 def test_open_device(test_client, mocker):
@@ -83,14 +81,13 @@ def test_open_device(test_client, mocker):
     mock_devices.return_value = [sane_devices["brother"]]
 
     mock_open_device = mocker.patch.object(desanity, "open_device")
-    mock_open_device.return_value = {'Ok': True,
-                                     'device': 'brother4:net1;dev0'}
+    mock_open_device.return_value = "brother4_net1_dev0"
     resp = test_client.post('devices/open', json={"device_name":
                                                   "brother4:net1;dev0"},
                             content_type='application/json')
 
-    assert resp.status_code == 200
-    assert resp.json['Ok']
+    assert resp.status_code == 201
+    assert "brother4_net1_dev0" in resp.json['device_id']
 
 
 def test_open_device_unknown(test_client, mocker):
@@ -106,7 +103,6 @@ def test_open_device_unknown(test_client, mocker):
     resp = test_client.post('devices/open', json={"device_name": device},
                             content_type='application/json')
 
-    assert resp.status_code == 200
-    assert not resp.json['Ok']
-    assert f"Error opening sane device {device}" in resp.json['ErrMsg']
+    assert resp.status_code == 404
+    assert f"Sane device {device} not found" in resp.json['ErrMsg']
 # }}}

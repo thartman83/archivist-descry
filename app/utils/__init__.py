@@ -19,7 +19,7 @@
 # }}}
 
 # __init__ # {{{
-from .desanity import desanity, DesanityException
+from .desanity import desanity, DesanityUnknownDev, DesanityException
 
-__all__ = ['desanity', 'DesanityException']
+__all__ = ['desanity', 'DesanityUnknownDev', 'DesanityException']
 # }}}
