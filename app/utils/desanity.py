@@ -62,34 +62,36 @@ class DevParams(IntEnum):
 class Desanity():
     """Main utilty object providing SANE libray functionality."""
 
-    def __init__(self):
-        """Construct for the Desanity object."""
-        self._sane_version = None
-        self._devices = []
-        self._open_devices = {}
-        self._parameters = None
+    sane_version: str
+    sene_devices: list
+    _devices: []
+    _open_devices: dict
 
+    def __init__(self) -> None:
+        """Construct for the Desanity object."""
         sane.init()
+        self.initialize()
 
     @property
-    def sane_version(self):
+    def sane_version(self) -> str:
         """Return the version of the SANE object."""
         return self._sane_version
 
     @property
-    def available_devices(self):
+    def available_devices(self) -> list:
         """Return the list of devices from SANE."""
         if not self._devices:
             self.refresh_devices()
+
         return list(map(lambda device: device[0], self._devices))
 
-    def device_options(self, device_name):
+    def device_options(self, device_name) -> dict:
         """Return the options available for device {device_name}."""
         if device_name not in self.open_devices():
             raise DesanityUnknownDev(f"Device {device_name} not opened")
 
         # parse the option tuples
-        dev = self.open_devices()[device_name]
+        dev = self._open_devices[device_name]
         options = dev.get_options()
         ret = []
         for opt in options:
@@ -120,7 +122,7 @@ class Desanity():
         if device_name not in self.open_devices():
             raise DesanityUnknownDev(f"Device {device_name} not opened")
 
-        dev = self._devices['device_name']
+        dev = self._devices[device_name]
 
         if option_name not in list(map(lambda opt: opt[DevOptions.PROP_NAME],
                                        self.device_options(device_name))):
@@ -134,7 +136,7 @@ class Desanity():
         if device_name not in self.open_devices():
             raise DesanityUnknownDev(f"Device {device_name} not opened")
 
-        parameters = self.open_devices()[device_name].get_parameters()
+        parameters = self._open_devices[device_name].get_parameters()
 
         return {
             'format': parameters[DevParams.FORMAT],
@@ -150,7 +152,6 @@ class Desanity():
         self._sane_version = None
         self._devices = []
         self._open_devices = {}
-        self._parameters = None
 
         return self.sane_version
 

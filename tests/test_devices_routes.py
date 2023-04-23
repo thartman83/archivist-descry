@@ -21,10 +21,11 @@
 # libraries # {{
 import pytest
 import sane
+from app.utils.desanity import desanity
 from app.appfactory import create_app
 from app.config import TestConfig
 from .config import sane_devices
-from app.utils.desanity import desanity
+from .mocks import MockBrotherDev
 # }}}
 
 
@@ -105,4 +106,43 @@ def test_open_device_unknown(test_client, mocker):
 
     assert resp.status_code == 404
     assert f"Sane device {device} not found" in resp.json['ErrMsg']
+
+
+def test_get_open_device(test_client, mocker):
+    """
+    GIVEN a descry client
+    WHEN /device/open/{device_name} is invoked
+    WHEN device is opened
+    SHOULD return list of device options and parameters
+    """
+    desanity.initialize()
+    device_name = "brother4:net1;dev0"
+    mock_get_devices = mocker.patch.object(sane, "get_devices")
+    mock_get_devices.return_value = [sane_devices["brother"]]
+
+    mock_sane_open = mocker.patch.object(sane, "open")
+    mock_sane_open.return_value = MockBrotherDev()
+
+    desanity.refresh_devices()
+    common_name = desanity.open_device(device_name)
+
+    resp = test_client.get(f'devices/open/{common_name}')
+
+    assert resp.status_code == 200
+
+
+def test_get_open_device_unknown(test_client, mocker):
+    """
+    GIVEN a descry client
+    WHEN /device/open/{device_name} is invoked
+    WHEN device is not opened or doesn't exist
+    SHOULD return list of device options and parameters
+    """
+    mock_devices = mocker.patch.object(sane, "get_devices")
+    mock_devices.return_value = [sane_devices["brother"]]
+    device_name = "epson5_net1_dev0"
+    resp = test_client.get(f'devices/open/{device_name}')
+
+    assert resp.status_code == 404
+    assert f"Sane device {device_name} not found" in resp.json['ErrMsg']
 # }}}

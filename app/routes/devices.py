@@ -99,10 +99,10 @@ def open_device():
     }, 201
 
 
-@devices_bp.route('/<string:device_id>', methods=['GET'])
-def get_device(device_id):
+@devices_bp.route('/open/<string:device_name>', methods=['GET'])
+def get_open_device(device_name):
     """
-    Get the current sane device.
+    Open a scanning device within Descry.
 
     ---
     tags:
@@ -110,22 +110,61 @@ def get_device(device_id):
     parameters:
       - name: device_name
         in: path
-        description: name of device to get the information from
+        description: Name of device to open
         required: true
         type: string
     responses:
       200:
-        description: Return information about the device
+         description: Device description, options and parameters
       404:
-        description: Device not found
+         description: Device not found
     """
     try:
-        device = desanity.available_devices[device_id]
+        if device_name not in desanity.open_devices():
+            raise DesanityUnknownDev
+
+        params = desanity.device_parameters(device_name)
+        opts = desanity.device_options(device_name)
+
     except DesanityUnknownDev:
         return {
-            'ErrMsg': f'Sane device {device_id} not found or not open'
+            'ErrMsg': f'Sane device {device_name} not found'
         }, 404
 
     return {
-        device
+        "device_name": device_name,
+        "options": opts,
+        "parameters": params
     }, 200
+
+
+# @devices_bp.route('/<string:device_id>', methods=['GET'])
+# def get_device(device_id):
+#     """
+#     Get sane device {device_id}.
+
+#     ---
+#     tags:
+#       - devices
+#     parameters:
+#       - name: device_name
+#         in: path
+#         description: name of device to get the information from
+#         required: true
+#         type: string
+#     responses:
+#       200:
+#         description: Return information about the device
+#       404:
+#         description: Device not found
+#     """
+#     try:
+#         device = desanity.available_devices[device_id]
+#     except DesanityUnknownDev:
+#         return {
+#             'ErrMsg': f'Sane device {device_id} not found or not open'
+#         }, 404
+
+#     return {
+#         device
+#     }, 200

@@ -9,3 +9,4 @@ python-lsp-server[all]
 python-sane==2.9.1
 flask-swagger==0.2.14
 flask-swagger-ui==4.11.1
+debugpy==1.6.7

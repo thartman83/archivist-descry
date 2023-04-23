@@ -72,7 +72,7 @@ def test_get_devices_multiple(mock_refresh_devices, mock_sane):
     desanity.initialize()
     mock_sane.return_value = [sane_devices["brother"]]
 
-    for _ in range(2, random.randint(2, 7)):
+    for _ in range(2, random.randint(3, 7)):
         devices = desanity.available_devices
 
     assert "brother4:net1;dev0" in devices
@@ -139,8 +139,7 @@ def test_open_device_common_name(mock_open, mock_devices):
 
 @mock.patch.object(sane, "get_devices")
 @mock.patch.object(sane, "open")
-@mock.patch.object(desanity, "open_devices")
-def test_device_options(mock_open_devices, mock_open, mock_devices):
+def test_device_options(mock_open, mock_devices):
     """
     GIVEN an initialized desanity object
     GIVEN sane device found
@@ -148,12 +147,12 @@ def test_device_options(mock_open_devices, mock_open, mock_devices):
     SHOULD return a parsed set of device options
     """
     desanity.initialize()
-    mock_devices.return_value = [sane_devices["brother"]]
-    mock_open_devices.return_value = {"brother": MockBrotherDev()}
     device_name = "brother4:net1;dev0"
-    mock_open.return_value = device_name
+    mock_devices.return_value = [sane_devices["brother"]]
+    mock_open.return_value = MockBrotherDev()
+    desanity.open_device(device_name, device_name)
 
-    parsed_options = desanity.device_options("brother")
+    parsed_options = desanity.device_options(device_name)
 
     assert len(parsed_options) == 12
     assert parsed_options[2]['Name'] == 'Scan mode'
@@ -167,8 +166,7 @@ def test_device_options(mock_open_devices, mock_open, mock_devices):
 
 @mock.patch.object(sane, "get_devices")
 @mock.patch.object(sane, "open")
-@mock.patch.object(desanity, "open_devices")
-def test_device_paramaters(mock_open_devices, mock_open, mock_devices):
+def test_device_paramaters(mock_open, mock_devices):
     """
     GIVEN an initialized desanity object
     GIVEN sane device found
@@ -176,12 +174,12 @@ def test_device_paramaters(mock_open_devices, mock_open, mock_devices):
     SHOULD return a parsed set of device parameters
     """
     desanity.initialize()
-    mock_devices.return_value = [sane_devices["brother"]]
-    mock_open_devices.return_value = {"brother": MockBrotherDev()}
     device_name = "brother4:net1;dev0"
-    mock_open.return_value = device_name
+    mock_devices.return_value = [sane_devices["brother"]]
+    mock_open.return_value = MockBrotherDev()
+    desanity.open_device(device_name, device_name)
 
-    parsed_params = desanity.device_parameters("brother")
+    parsed_params = desanity.device_parameters(device_name)
 
     assert parsed_params['format'] == 'color'
     assert parsed_params['last_frame'] == 1
