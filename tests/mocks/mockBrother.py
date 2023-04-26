@@ -75,6 +75,27 @@ class MockBrotherDev():
         """Return mock device parameters."""
         return brother_parameters
 
+    def device_options(self):
+        """Mock return device options."""
+        return brother_options
+
+    # def __setattr__(self, name, value):
+    #     """Mock set sane device option."""
+    #     idx = list(map(lambda opt: opt[2], brother_options)).index(name)
+
+    #     opt = brother_options[idx]
+
+    #     # check to see if the option is a tuple which means it is a
+    #     # range of values
+    #     if isinstance(opt[8], tuple) and not str(value).isnumeric():
+    #         raise SaneError('Invalid value in range')
+
+    #     if opt[8][0] >= float(value) and opt[8][1] <= float(value):
+    #         raise SaneError('Value not in range')
+
+    #     if value not in opt[8]:
+    #         raise SaneError('Value not in range')
+
 
 class MockBrotherDevProperty():
     """A mocked sane dev property object."""
@@ -90,5 +111,9 @@ class MockBrotherDevProperty():
     def another_func(self):
         """Another function that exits."""
         return True
+
+
+class SaneError(Exception):
+    """Mock sane error."""
 
 # }}}

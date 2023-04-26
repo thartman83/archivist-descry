@@ -20,6 +20,10 @@
 
 # __init__ # {{{
 from .desanity import desanity, DesanityUnknownDev, DesanityException
+from .desanity import DesanityUnknownOption, DesanityOptionInvalidValue
+from .desanity import DesanityOptionUnsettable
 
-__all__ = ['desanity', 'DesanityUnknownDev', 'DesanityException']
+__all__ = ['desanity', 'DesanityUnknownDev', 'DesanityException',
+           "DesanityUnknownOption", "DesanityOptionInvalidValue",
+           "DesanityOptionUnsettable"]
 # }}}

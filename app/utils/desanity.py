@@ -122,14 +122,17 @@ class Desanity():
         if device_name not in self.open_devices():
             raise DesanityUnknownDev(f"Device {device_name} not opened")
 
-        dev = self._devices[device_name]
+        dev = self._open_devices[device_name]
 
-        if option_name not in list(map(lambda opt: opt[DevOptions.PROP_NAME],
+        if option_name not in list(map(lambda opt: opt['propertyName'],
                                        self.device_options(device_name))):
-            raise DesanityException(f"Option {option_name} not found for"
-                                    "device {device_name}")
+            raise DesanityUnknownOption(f"Option {option_name} not found for"
+                                        "device {device_name}")
 
-        dev.setattr(option_name, value)
+        try:
+            setattr(dev, option_name, value)
+        except SaneError:
+            raise DesanityOptionInvalidValue()
 
     def device_parameters(self, device_name):
         """Return the device parameters for device {device_name}."""
@@ -237,6 +240,18 @@ class DesanityException(Exception):
 
 class DesanityUnknownDev(DesanityException):
     """Unknown device referenced."""
+
+
+class DesanityOptionInvalidValue(DesanityException):
+    """Invalid value set to SANE option."""
+
+
+class DesanityOptionUnsettable(DesanityException):
+    """SANE option is not settable"""
+
+
+class DesanityUnknownOption(DesanityException):
+    """Unknown SANE option"""
 
 
 desanity = Desanity()
