@@ -22,7 +22,8 @@
 
 brother_options = [
     (0, None, 'Number of options',
-     'Read-only option that specifies how many options a specific devices supports.',
+     """Read-only option that specifies how many options a specific
+devices supports.""",
      0, 0, 4, 4, None),
     (1, None, 'Mode', '', 5, 0, 4, 64, None),
     (2, 'mode', 'Scan mode', 'Select the scan mode', 3, 0, 30, 5,

@@ -19,7 +19,9 @@
 # }}}
 
 # libraries # {{{
+import base64
 from flask import Blueprint, request
+from io import BytesIO
 from app.utils import desanity, DesanityUnknownDev, DesanityException
 # }}}
 
@@ -128,4 +130,39 @@ def get_device(device_id):
 
     return {
         device
+    }, 200
+
+
+@devices_bp.route('/<string:device_name>/scan', methods=['GET'])
+def scan(device_name):
+    """
+    Scan a document using device_name.
+
+    ---
+    tags:
+      - devices
+    parameters:
+      - name: device_name
+        id: path
+        description: id of the device to scan with
+        required: true
+        type: string
+    responses:
+      200:
+        description: Return the scan document
+      404:
+        description: Device not found
+    """
+    try:
+        images = desanity.scan(device_name)
+        buf = BytesIO()
+        images.save(buf, format="TIFF")
+        img_str = base64.b64encode(buf.getvalue()).decode('ascii')
+    except DesanityUnknownDev:
+        return {
+            'ErrMsg': f'Sane device {device_name} not found or not opened'
+        }, 404
+
+    return {
+        "image": img_str
     }, 200

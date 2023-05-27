@@ -1,17 +1,14 @@
 # -*- restclient -*-
 
-## Initialize
-GET http://127.0.0.1:5000/initialize
-
 ## get the list of devices
 GET http://127.0.0.1:5000/devices
 
 ## set the current device
-PUT http://127.0.0.1:5000/devices/device
+POST http://127.0.0.1:5000/devices/open
 Content-Type: application/json
 {
   "device_name": "brother4:net1;dev0"
 }
 
 ## Get the device information
-GET http://127.0.0.1:5000/devices/device
+GET http://127.0.0.1:5000/devices/brother4_net1_dev0/scan

@@ -1,5 +1,5 @@
 ###############################################################################
-#  run.py for archivist descry microservices                                  #
+#  desanityExceptions.py for archivist-descry microservice                    #
 #  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -14,24 +14,21 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Module DocString ## {{{
-"""Main entry point for the descry microservice."""
+# Commentary {{{
+"""Exceptions for Desanity classes."""
 # }}}
 
+# Desanity Exceptions {{{
 
-# run # {{{
-import os
-from app import create_app, Configs
 
-if __name__ == "__main__":
-    configType = os.environ.get('configType') or "DEV"
-    config = {}
-    try:
-        config = Configs[configType]()
-    except KeyError:
-        print(f"Unknown configuration type {configType}")
+class DesanityException(Exception):
+    """Raise when a SANE issue occurs."""
 
-    app = create_app(config)
-    app.run()
 
+class DesanityUnknownDev(DesanityException):
+    """Unknown device referenced."""
+
+
+class DesanityDeviceBusy(DesanityException):
+    """The SANE device is busy."""
 # }}}
