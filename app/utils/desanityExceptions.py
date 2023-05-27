@@ -19,6 +19,8 @@
 # }}}
 
 # Desanity Exceptions {{{
+import sane
+SaneException = sane._sane.error
 
 
 class DesanityException(Exception):

@@ -25,17 +25,12 @@ a singleton object.
 
 # libraires {{{
 import sane
-from .desanityDevice import DevParams, DevOptions, DesanityDevice
-from .desanityExceptions import DesanityUnknownDev, DesanityException
+from .desanityDevice import DesanityDevice
+from .desanityExceptions import DesanityUnknownDev
 # }}}
 
 
 # desanity # {{{
-
-# typedef the sane exception for easier readability
-SaneError = sane._sane.error
-
-
 class Desanity():
     """Main utilty object providing SANE libray functionality."""
 
@@ -104,6 +99,13 @@ class Desanity():
             return []
 
         return self._open_devices.keys()
+
+    def get_open_device(self, common_name):
+        """Return the open Desanity Device."""
+        if common_name not in self.open_devices():
+            raise DesanityUnknownDev()
+
+        return self._open_devices[common_name]
 
     def _replace_url_characters(self, url_string):
         """Replace illegal url characters with an undescore."""

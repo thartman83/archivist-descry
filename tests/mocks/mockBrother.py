@@ -18,6 +18,11 @@
 """Mock brother scanner device."""
 # }}}
 
+# Libraries {{{
+import time
+from PIL import Image
+# }}}
+
 # mockBrother {{{
 
 brother_options = [
@@ -80,6 +85,10 @@ class MockBrotherDev():
         """Mock return device options."""
         return brother_options
 
+    def multi_scan(self):
+        """Mock multi scan method."""
+        return MockBrotherIterator()
+
     # def __setattr__(self, name, value):
     #     """Mock set sane device option."""
     #     idx = list(map(lambda opt: opt[2], brother_options)).index(name)
@@ -96,6 +105,26 @@ class MockBrotherDev():
 
     #     if value not in opt[8]:
     #         raise SaneError('Value not in range')
+
+
+class MockBrotherIterator():
+    """Mock Iterator for ADF Scans."""
+
+    def __init__(self):
+        """Init function."""
+        self._cur_page = 1
+
+    def __iter__(self):
+        """Iterate function."""
+        return self
+
+    def __next__(self):
+        """Next function."""
+        if self._cur_page > 3:
+            raise StopIteration
+
+        time.sleep(1)
+        return Image.open(f"../data/lorem{self._cur_page}.png")
 
 
 class MockBrotherDevProperty():

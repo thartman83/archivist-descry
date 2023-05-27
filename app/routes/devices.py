@@ -125,8 +125,10 @@ def get_open_device(device_name):
         if device_name not in desanity.open_devices():
             raise DesanityUnknownDev
 
-        params = desanity.device_parameters(device_name)
-        opts = desanity.device_options(device_name)
+        device = desanity.get_open_device(device_name)
+
+        params = device.parameters
+        opts = device.options
 
     except DesanityUnknownDev:
         return {
@@ -161,7 +163,11 @@ def scan(device_name):
         description: Device not found
     """
     try:
-        images = desanity.scan(device_name)
+        if device_name not in desanity.open_devices():
+            raise DesanityUnknownDev
+
+        device = desanity.get_open_device(device_name)
+        images = device.scan()
         buf = BytesIO()
         images.save(buf, format="TIFF")
         img_str = base64.b64encode(buf.getvalue()).decode('ascii')

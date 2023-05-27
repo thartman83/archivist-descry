@@ -22,8 +22,8 @@
 from threading import Thread
 from enum import IntEnum
 from datetime import datetime
-from .desanityExceptions import DesanityDeviceBusy, DesanityException
-from .desanityExceptions import DesanityUnknownOption
+from .desanityExceptions import DesanityDeviceBusy, DesanityOptionInvalidValue
+from .desanityExceptions import DesanityUnknownOption, SaneException
 # }}}
 
 # desanity device {{{
@@ -130,13 +130,15 @@ class DesanityDevice():
 
     def set_option(self, option_name, value):
         """Set a SANE device option."""
-        if option_name not in list(map(lambda opt: opt["propertyName"],
-                                       self.options)):
+        keys = list(map(lambda opt: opt["propertyName"], self.options))
+        if option_name not in keys:
             raise DesanityUnknownOption(f"Option {option_name} not found for"
                                         "device {device_name}")
 
-        self._sane_device.source = 'FlatBed'
-#        setattr(self._sane_device, option_name, value)
+        try:
+            setattr(self._sane_device, option_name, value)
+        except SaneException as ex:
+            raise DesanityOptionInvalidValue() from ex
 
     def scan(self):
         """Use the SANE device to perform a scan."""

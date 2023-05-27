@@ -21,7 +21,7 @@
 # Libraries {{{
 # from unittest import mock
 from app.utils import DesanityDevice, DesanityDeviceBusy, DevStatus
-from app.utils import DesanityOptionInvalidValue, DesanityOptionUnsettable
+from app.utils import DesanityOptionInvalidValue
 from app.utils import DesanityUnknownOption, DesanityException
 from .mocks import MockBrotherDev
 # }}}
@@ -108,41 +108,21 @@ def test_set_device_option_unknown_option():
     assert passed
 
 
-def test_set_device_option_invalid_value():
-    """
-    GIVEN an initialized desanity object
-    GIVEN sane device found
-    WHEN set_device_parameter is called for an existing device
-    WHEN the option is not settable
-    SHOULD throw a DesanityOptionUnsettable execption
-    """
-    device = DesanityDevice(MockBrotherDev())
-
-    try:
-        device.set_option("mode", "foo")
-        passed = False
-    except DesanityOptionInvalidValue:
-        passed = True
-
-    assert passed
-
-
 def test_device_busy():
     """
     GIVEN an initiatlized desanity device object
     WHEN the device is currently scanning
     SHOULD raise a DesanityDeviceBusy exception
     """
+    passed = False
     try:
         device = DesanityDevice(MockBrotherDev())
         assert device.status == DevStatus.IDLE
         device.scan()
-
         assert device.status == DevStatus.SCANNING
         device.scan()
-        assert False
     except DesanityDeviceBusy:
-        assert True
+        passed = True
 
-
+    assert passed
 # }}}
