@@ -31,4 +31,16 @@ class DesanityUnknownDev(DesanityException):
 
 class DesanityDeviceBusy(DesanityException):
     """The SANE device is busy."""
+
+
+class DesanityOptionInvalidValue(DesanityException):
+    """Invalid value for SANE device option."""
+
+
+class DesanityOptionUnsettable(DesanityException):
+    """SANE option not settable."""
+
+
+class DesanityUnknownOption(DesanityException):
+    """Option does not exist for sane device."""
 # }}}
