@@ -71,7 +71,7 @@ def test_get_devices_multiple(mock_refresh_devices, mock_sane):
     desanity.initialize()
     mock_sane.return_value = [sane_devices["brother"]]
 
-    for _ in range(2, random.randint(2, 7)):
+    for _ in range(2, random.randint(3, 7)):
         devices = desanity.available_devices
 
     assert "brother4:net1;dev0" in devices

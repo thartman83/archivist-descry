@@ -46,6 +46,137 @@ def test_device_options():
     assert isinstance(parsed_options[5]['constraints'], dict)
     assert parsed_options[5]['constraints']['min'] == -50
 
+@mock.patch.object(sane, "get_devices")
+@mock.patch.object(sane, "open")
+def test_device_paramaters(mock_open, mock_devices):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN device_parameters is called with an existing device
+    SHOULD return a parsed set of device parameters
+    """
+    desanity.initialize()
+    device_name = "brother4:net1;dev0"
+    mock_devices.return_value = [sane_devices["brother"]]
+    mock_open.return_value = MockBrotherDev()
+    desanity.open_device(device_name, device_name)
+
+    parsed_params = desanity.device_parameters(device_name)
+
+    assert parsed_params['format'] == 'color'
+    assert parsed_params['last_frame'] == 1
+    assert parsed_params['pixelPerLine'] == 1651
+    assert parsed_params['lines'] == 2783
+    assert parsed_params['depth'] == 8
+    assert parsed_params['bytes_per_line'] == 4953
+
+
+@mock.patch.object(sane, "get_devices")
+@mock.patch.object(sane, "open")
+def test_set_device_option(mock_open, mock_devices):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN set_device_parameter is called for an existing device
+    SHOULD set the sane parameter
+    """
+    desanity.initialize()
+    device_name = "brother4:net1;dev0"
+    mock_devices.return_value = [sane_devices["brother"]]
+    mock_open.return_value = MockBrotherDev()
+    desanity.open_device(device_name, device_name)
+
+    option_name = "mode"
+    value = "True Gray"
+
+    try:
+        desanity.set_device_option(device_name, option_name, value)
+        passed = True
+    except DesanityUnknownDev:
+        passed = False
+
+    assert passed
+
+
+def test_set_device_optionr_unknown_device(mocker):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN set_device_parameter is called for an unknown device
+    SHOULD throw a DesanityUnknownDevice execption
+    """
+    desanity.initialize()
+
+    mock_get_devies = mocker.patch.object(sane, "get_devices")
+    mock_get_devies.return_value = [sane_devices["brother"]]
+
+    mock_open_device = mocker.patch.object(sane, "open")
+    mock_open_device.return_value = MockBrotherDev()
+
+    try:
+        desanity.set_device_option("epson", "mode", "True Gray")
+        passed = False
+    except DesanityUnknownDev:
+        passed = True
+
+    assert passed
+
+
+def test_set_device_option_unknown_option(mocker):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN set_device_parameter is called for an existing device
+    WHEN the option is not available
+    SHOULD throw a DesanityUnknownOption execption
+    """
+    desanity.initialize()
+
+    mock_get_devies = mocker.patch.object(sane, "get_devices")
+    mock_get_devies.return_value = [sane_devices["brother"]]
+
+    mock_open_device = mocker.patch.object(sane, "open")
+    mock_open_device.return_value = MockBrotherDev()
+
+    desanity.refresh_devices()
+    common_name = desanity.open_device('brother4:net1;dev0')
+
+    try:
+        desanity.set_device_option(common_name, "magic", "True Gray")
+        passed = False
+    except DesanityUnknownOption:
+        passed = True
+
+    assert passed
+
+
+def test_set_device_option_invalid_value(mocker):
+    """
+    GIVEN an initialized desanity object
+    GIVEN sane device found
+    WHEN set_device_parameter is called for an existing device
+    WHEN the option is not settable
+    SHOULD throw a DesanityOptionUnsettable execption
+    """
+    desanity.initialize()
+
+    mock_get_devies = mocker.patch.object(sane, "get_devices")
+    mock_get_devies.return_value = [sane_devices["brother"]]
+
+    mock_open_device = mocker.patch.object(sane, "open")
+    mock_open_device.return_value = MockBrotherDev()
+
+    desanity.refresh_devices()
+    common_name = desanity.open_device('brother4:net1;dev0')
+
+    try:
+        desanity.set_device_option(common_name, "mode", "foo")
+        passed = False
+    except DesanityOptionInvalidValue:
+        passed = True
+
+    assert passed
+
 
 def test_device_paramaters():
     """

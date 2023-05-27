@@ -39,25 +39,27 @@ SaneError = sane._sane.error
 class Desanity():
     """Main utilty object providing SANE libray functionality."""
 
-    def __init__(self):
-        """Construct for the Desanity object."""
-        self._sane_version = None
-        self._devices = []
-        self._open_devices = {}
-        self._parameters = None
+    sane_version: str
+    sene_devices: list
+    _devices: []
+    _open_devices: dict
 
+    def __init__(self) -> None:
+        """Construct for the Desanity object."""
         sane.init()
+        self.initialize()
 
     @property
-    def sane_version(self):
+    def sane_version(self) -> str:
         """Return the version of the SANE object."""
         return self._sane_version
 
     @property
-    def available_devices(self):
+    def available_devices(self) -> list:
         """Return the list of devices from SANE."""
         if not self._devices:
             self.refresh_devices()
+
         return list(map(lambda device: device[0], self._devices))
 
     def initialize(self):
@@ -65,7 +67,6 @@ class Desanity():
         self._sane_version = None
         self._devices = []
         self._open_devices = {}
-        self._parameters = None
 
         return self.sane_version
 
