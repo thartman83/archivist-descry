@@ -61,6 +61,14 @@ class DevStatus(IntEnum):
     ERROR = 3
 
 
+class JobStatus(IntEnum):
+    """Sane job statuses."""
+
+    STARTED = 0
+    COMPLETED = 1
+    ERROR = 2
+
+
 class DesanityDevice():
     """Wrapper for a SANE device."""
 
@@ -101,7 +109,7 @@ class DesanityDevice():
 
     @property
     def options(self):
-        """Return the options available for device {device_name}."""
+        """Return the options available for the device."""
         # parse the option tuples
         options = self._sane_device.get_options()
         ret = []
@@ -127,6 +135,11 @@ class DesanityDevice():
             })
 
         return ret
+
+    @property
+    def jobs(self):
+        """Return the list of running and completed jobs on the device."""
+        return self._jobs
 
     def set_option(self, option_name, value):
         """Set a SANE device option."""
@@ -159,9 +172,11 @@ class DesanityDevice():
             for page in pages:
                 job.add_image(page)
         except Exception as ex:
+            job.mark_error(str(ex))
             raise ex
         finally:
             self._status = DevStatus.COMPLETED
+            job.mark_complete()
 
     def _get_next_job(self):
         """Return the next available job number for the device."""
@@ -213,13 +228,19 @@ class DesanityJob():
 
     _job_number = None
     _images = []
+    _start_date = None
+    _end_date = None
+    _job_status = None
+    _error_str = None
 
     def __init__(self, job_number):
         """Initiatlize the Job."""
         self._job_number = job_number
+        self._start_date = datetime.now()
+        self._job_status = JobStatus.STARTED
 
     @property
-    def get_job_number(self):
+    def job_number(self):
         """Return the job number assoicated with the job."""
         return self._job_number
 
@@ -228,7 +249,38 @@ class DesanityJob():
         """Return the scanned images associated with the job."""
         return self._images
 
+    @property
+    def status(self):
+        """Return the job status."""
+        return self._job_status
+
+    @property
+    def start_date(self):
+        """Return the job start date."""
+        return self._start_date
+
+    @property
+    def end_date(self):
+        """Return the job end date."""
+        return self._end_date
+
+    @property
+    def error_str(self):
+        """Return the error message of the job."""
+        return self._error_str
+
     def add_image(self, image):
         """Add an image to the job."""
         self._images.append(image)
+
+    def mark_complete(self):
+        """Mark job as completed."""
+        self._job_status = JobStatus.COMPLETED
+        self._end_date = datetime.now()
+
+    def mark_error(self, error_str):
+        """Mark job as having errored."""
+        self._job_status = JobStatus.ERROR
+        self._end_date = datetime.now()
+        self._error_str = error_str
 # }}}

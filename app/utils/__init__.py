@@ -27,10 +27,10 @@ from .desanityExceptions import DesanityUnknownOption
 from .desanityExceptions import DesanityOptionInvalidValue
 from .desanityExceptions import DesanityOptionUnsettable
 from .desanityExceptions import SaneException
-from .desanityDevice import DevStatus
+from .desanityDevice import DevStatus, JobStatus
 
 __all__ = ['desanity', 'DesanityUnknownDev', 'DesanityException',
            "DesanityDevice", "DesanityDeviceBusy", "DevStatus",
            "DesanityUnknownOption", "DesanityOptionInvalidValue",
-           "DesanityOptionUnsettable", "SaneException"]
+           "DesanityOptionUnsettable", "SaneException", "JobStatus"]
 # }}}
