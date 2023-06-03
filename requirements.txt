@@ -1,0 +1,8 @@
+Flask==2.2.2
+Flask-Cors==3.0.10
+Flask-SQLAlchemy==3.0.3
+python-dotenv==0.21.0
+python-sane==2.9.1
+Pillow==9.5.0
+flask-swagger==0.2.14
+flask-swagger-ui==4.11.1
