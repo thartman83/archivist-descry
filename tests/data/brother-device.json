@@ -1,0 +1,195 @@
+{
+  "Ok": true,
+  "device": {
+    "name": "brother4:net1;dev0",
+    "options": [
+      {
+        "Description": "Read-only option that specifies how many options a specific devices supports.",
+        "Name": "Number of options",
+        "cap": 4,
+        "constraints": null,
+        "propertyName": null,
+        "size": 4,
+        "type": 0,
+        "unit": 0,
+        "value": null
+      },
+      {
+        "Description": "",
+        "Name": "Mode",
+        "cap": 64,
+        "constraints": null,
+        "propertyName": null,
+        "size": 4,
+        "type": 5,
+        "unit": 0,
+        "value": null
+      },
+      {
+        "Description": "Select the scan mode",
+        "Name": "Scan mode",
+        "cap": 5,
+        "constraints": [
+          "Black & White",
+          "Gray[Error Diffusion]",
+          "True Gray",
+          "24bit Color",
+          "24bit Color[Fast]"
+        ],
+        "propertyName": "mode",
+        "size": 30,
+        "type": 3,
+        "unit": 0,
+        "value": "'24bit Color[Fast]'"
+      },
+      {
+        "Description": "Sets the resolution of the scanned image.",
+        "Name": "Scan resolution",
+        "cap": 5,
+        "constraints": [
+          100,
+          150,
+          200,
+          300,
+          400,
+          600,
+          1200,
+          2400,
+          4800,
+          9600
+        ],
+        "propertyName": "resolution",
+        "size": 4,
+        "type": 1,
+        "unit": 4,
+        "value": "200"
+      },
+      {
+        "Description": "Selects the scan source (such as a document-feeder).",
+        "Name": "Scan source",
+        "cap": 5,
+        "constraints": [
+          "FlatBed",
+          "Automatic Document Feeder(left aligned)",
+          "Automatic Document Feeder(left aligned,Duplex)",
+          "Automatic Document Feeder(centrally aligned)",
+          "Automatic Document Feeder(centrally aligned,Duplex)"
+        ],
+        "propertyName": "source",
+        "size": 64,
+        "type": 3,
+        "unit": 0,
+        "value": "'Automatic Document Feeder(left aligned)'"
+      },
+      {
+        "Description": "Controls the brightness of the acquired image.",
+        "Name": "Brightness",
+        "cap": 37,
+        "constraints": {
+          "max": 50.0,
+          "min": -50.0,
+          "step": 1.0
+        },
+        "propertyName": "brightness",
+        "size": 4,
+        "type": 2,
+        "unit": 5,
+        "value": null
+      },
+      {
+        "Description": "Controls the contrast of the acquired image.",
+        "Name": "Contrast",
+        "cap": 37,
+        "constraints": {
+          "max": 50.0,
+          "min": -50.0,
+          "step": 1.0
+        },
+        "propertyName": "contrast",
+        "size": 4,
+        "type": 2,
+        "unit": 5,
+        "value": null
+      },
+      {
+        "Description": "",
+        "Name": "Geometry",
+        "cap": 64,
+        "constraints": null,
+        "propertyName": null,
+        "size": 4,
+        "type": 5,
+        "unit": 0,
+        "value": null
+      },
+      {
+        "Description": "Top-left x position of scan area.",
+        "Name": "Top-left x",
+        "cap": 5,
+        "constraints": {
+          "max": 211.89999389648438,
+          "min": 0.0,
+          "step": 0.0999908447265625
+        },
+        "propertyName": "tl_x",
+        "size": 4,
+        "type": 2,
+        "unit": 3,
+        "value": "0.0"
+      },
+      {
+        "Description": "Top-left y position of scan area.",
+        "Name": "Top-left y",
+        "cap": 5,
+        "constraints": {
+          "max": 355.59999084472656,
+          "min": 0.0,
+          "step": 0.0999908447265625
+        },
+        "propertyName": "tl_y",
+        "size": 4,
+        "type": 2,
+        "unit": 3,
+        "value": "0.0"
+      },
+      {
+        "Description": "Bottom-right x position of scan area.",
+        "Name": "Bottom-right x",
+        "cap": 5,
+        "constraints": {
+          "max": 211.89999389648438,
+          "min": 0.0,
+          "step": 0.0999908447265625
+        },
+        "propertyName": "br_x",
+        "size": 4,
+        "type": 2,
+        "unit": 3,
+        "value": "211.89999389648438"
+      },
+      {
+        "Description": "Bottom-right y position of scan area.",
+        "Name": "Bottom-right y",
+        "cap": 5,
+        "constraints": {
+          "max": 355.59999084472656,
+          "min": 0.0,
+          "step": 0.0999908447265625
+        },
+        "propertyName": "br_y",
+        "size": 4,
+        "type": 2,
+        "unit": 3,
+        "value": "355.59999084472656"
+      }
+    ],
+    "parameters": {
+      "bytes_per_line": 4953,
+      "depth": 8,
+      "format": "color",
+      "last_frame": 1,
+      "lines": 2783,
+      "pixelPerLine": 1651
+    }
+  }
+}

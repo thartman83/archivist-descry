@@ -1,0 +1,21 @@
+# -*- restclient -*-
+
+## get the list of devices
+GET http://127.0.0.1:5000/devices
+
+## set the current device
+POST http://127.0.0.1:5000/devices/open
+Content-Type: application/json
+{
+  "device_name": "brother4:net1;dev0"
+}
+
+## Get the device information
+GET http://127.0.0.1:5000/devices/brother4_net1_dev0/scan
+
+## Get the list of jobs for the scanner
+GET http://127.0.0.1:5000/devices/brother4_net1_dev0/jobs
+
+## Get Specific job
+GET http://127.0.0.1:5000/devices/brother4_net1_dev0/jobs/1685215342
+
