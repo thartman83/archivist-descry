@@ -1,23 +1,26 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-alpine
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    sane \
-    sane-utils \
-    libsane-dev \
-    gcc \
-    curl \
-    iputils-ping \
-    && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get install -y \
+#    sane \
+#    sane-utils \
+#    libsane-dev \
+#    gcc \
+#    git \
+#    sane-airscan \
+#    && rm -rf /var/lib/apt/lists/*
 
-RUN curl https://download.brother.com/welcome/dlf105200/brscan4-0.4.11-1.amd64.deb > brscan4-0.4.11-1.amd64.deb
-RUN dpkg -i --force-all brscan4-0.4.11-1.amd64.deb
-RUN /opt/brother/scanner/brscan4/brsaneconfig4 -a name="BROTHER_MFC-L2700DW" model="MFC-L2700DW" ip="172.17.1.28"
+RUN apk add --no-cache sane sane-utils gcc git sane-dev
 
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+RUN git clone --depth 1 --branch 0.99.27 https://github.com/alexpevzner/sane-airscan.git sane-airscan
 
-COPY . .
+RUN cd sane-airscan
+RUN make ./
+RUN make install
 
-CMD [ "python3", "run.py"]
+RUN cd ..
+RUN git clone --depth 1 --branch main https://github.com/thartman83/archivist-descry.git descry
+
+RUN pip3 install -r descry/requirements.txt
+CMD [ "python3", "descry/app/run.py"]
