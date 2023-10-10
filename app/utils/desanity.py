@@ -41,7 +41,6 @@ class Desanity():
 
     def __init__(self) -> None:
         """Construct for the Desanity object."""
-        sane.init()
         self.initialize()
 
     @property
@@ -62,6 +61,8 @@ class Desanity():
         self._sane_version = None
         self._devices = []
         self._open_devices = {}
+        sane.exit()
+        sane.init()
 
         return self.sane_version
 
@@ -112,7 +113,8 @@ class Desanity():
         retval = url_string
         illegal_chars = [";", "/", "?", ":", "@", "&",
                          "=", "+", "$", ",", "{", "}",
-                         ",", '"', "^", "[", "]", "`"]
+                         ",", '"', "^", "[", "]", "`",
+                         " "]
         for char in illegal_chars:
             retval = retval.replace(char, '_')
 
