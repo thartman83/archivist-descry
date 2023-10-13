@@ -1,5 +1,26 @@
 # -*- restclient -*-
 
+## Initiatialize descry
+GET http://127.0.0.1:5000/initialize
+
+## get airscan configuration
+GET http://127.0.0.1:5000/airscan
+
+## add a device
+PUT http://127.0.0.1:5000/airscan/device
+Content-Type: application/json
+{
+  "name": "Brother4 MFC Scanner",
+  "url": "http://172.17.1.28/WebServices/Device, wsd"
+}
+
+## add a device
+PUT http://127.0.0.1:5000/airscan/device
+Content-Type: application/json
+{
+  "name": "testing"
+}
+
 ## get the list of devices
 GET http://127.0.0.1:5000/devices
 
@@ -7,15 +28,30 @@ GET http://127.0.0.1:5000/devices
 POST http://127.0.0.1:5000/devices/open
 Content-Type: application/json
 {
-  "device_name": "brother4:net1;dev0"
+  "device_name": "airscan:w1:Brother MFC-L2700DW series"
 }
 
+## Get open devices
+GET http://127.0.0.1:5000/devices/open
+
+## get open devices
+GET http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series
+
 ## Get the device information
-GET http://127.0.0.1:5000/devices/brother4_net1_dev0/scan
+GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/scan
 
 ## Get the list of jobs for the scanner
-GET http://127.0.0.1:5000/devices/brother4_net1_dev0/jobs
+GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs
 
 ## Get Specific job
-GET http://127.0.0.1:5000/devices/brother4_net1_dev0/jobs/1685215342
+GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs/1697168688
 
+## Get source
+GET http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series/option/source
+
+## Set source to flatbed
+PUT http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series/option/source
+Content-Type: application/json
+{
+  "value": "ADF"
+}
