@@ -1,5 +1,5 @@
 ###############################################################################
-#  docs.py for archivist card catalog microservice                            #
+#  spec.py for archivist card catalog microservice                            #
 #  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -15,20 +15,21 @@
 ###############################################################################
 
 # Description {{{
-"""Swagger documentation route."""
+"""OpenAPI specification."""
 # }}}
 
-# Docs routes # {{{
-from flask_swagger_ui import get_swaggerui_blueprint
+# Spec routes {{{
+import yaml
+from flask import Blueprint
 
-SWAGGER_URL = '/api/v1/docs'
-API_URL = '/api/v1/spec'
+spec_bp = Blueprint('spec', __name__, url_prefix='/spec')
 
-# Call factory function to create our blueprint
-swaggerui_bp = get_swaggerui_blueprint(
-    SWAGGER_URL,
-    API_URL,
-    config={
-        'app_name': "Descry"
-    }
-)
+
+@spec_bp.route('', methods=['GET'])
+def get_spec():
+    """Get the microservice speification."""
+    with open("openapi.yml", "r", encoding='utf-8') as yaml_in:
+        yaml_def = yaml.safe_load(yaml_in)
+        return yaml_def, 200
+
+# }}}

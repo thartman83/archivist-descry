@@ -1,0 +1,237 @@
+# -*- org-src-preserve-indentation: t; -*-
+#+TITLE: Archivist Descry
+#+AUTHOR: Tom Hartman
+
+* API
+** General
+#+begin_src yaml :tangle openapi.yml
+openapi: 3.0.0
+info:
+  title: Archivist Descry api
+  description: API for the Descry scanning microservive
+  version: 1.0.0
+#+end_src
+
+** Components
+#+begin_src yaml :tangle openapi.yml
+components:
+  schemas:
+    device_simple:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    device_attribute:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+    device_option:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    device:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        attributes:
+          type: array
+          items:
+            schema:
+              $ref: "#/components/schemas/device_attribute"
+        options:
+          type: array
+          items:
+            schema:
+              $ref: "#/components/schemas/device_option"
+    error:
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+#+end_src
+** Servers
+#+begin_src yaml :tangle openapi.yml
+servers:
+  - url: /api/v1
+#+end_src
+
+** Paths
+
+GET /api/v1/docs
+GET /api/v1/specs
+
+GET /api/v1/config
+GET /api/v1/config/initialize
+PUT /api/v1/config/discover_device
+PUT /api/v1/config/open_device
+
+GET /api/v1/devices
+GET /api/v1/devices/{guid}
+GET /api/v1/devices/{guid}/scan
+GET /api/v1/devices/{guid}/attributes
+GET /api/v1/devices/{guid}/options
+PUT /api/v1/devices/{guid}/options
+
+GET /api/v1/jobs
+GET /api/v1/jobs/{guid}
+
+*** Config
+#+begin_src yaml :tangle openapi.yml
+paths:
+  /config:
+    get:
+      description: Return available configurations
+      tags:
+        - config
+      responses:
+        '200':
+          description: Current Descry configuration
+          schema:
+            type: object
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
+#+end_src
+
+**** Refresh Device
+#+begin_src yaml -i :tangle openapi.yml
+  /config/device_refresh:
+    get:
+      description: Return the new list of available devices
+      tags:
+        - config
+      responses:
+        '200':
+          description: List of available devices
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
+#+end_src
+
+**** Add Device
+#+begin_src yaml :tangle openapi.yml
+  /config/add_device:
+    put:
+      description: Add a device by IP or name
+      tags:
+        - config
+      responses:
+
+#+end_src
+
+*** Devices
+
+**** List Devices
+
+#+begin_src yaml :tangle openapi.yml
+  /devices:
+    get:
+      description: List of configured scanning device resources
+      tags:
+        - devices
+#+end_src
+
+**** Get Device
+#+begin_src yaml :tangle openapi.yml
+  /devices/{guid}:
+    get:
+      description: Get information about a specific scanning resource
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+#+end_src
+
+**** Device attributes
+#+begin_src yaml :tangle openapi.yml
+  /devices/{guid}/attributes:
+    get:
+      decription: List of device attributes
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+#+end_src
+
+**** Device options
+#+begin_src yaml :tangle openapi.yml
+  /devices/{guid}/options:
+    get:
+      decription: List of device attributes
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+    put:
+      description: Update device options
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+        - in: query
+          name: options
+          type: array
+          items:
+            name: option
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+
+      tags:
+        - devices
+
+#+end_src
+
+**** Scan
+#+begin_src yaml :tangle openapi.yml
+  /devices/{guid}/scan:
+    description: List of device attributes
+    get:
+      decription: List of device attributes
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+
+#+end_src
+*** Jobs
+
+*** Admin

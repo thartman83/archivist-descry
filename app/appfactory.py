@@ -19,12 +19,13 @@
 # }}}
 
 # appfactory # {{{
-from flask import Flask, jsonify
-from flask_swagger import swagger
+import sys
+from flask import Flask
 from flask_cors import CORS
 from app.routes.airscan import airscan_bp
 from app.routes.devices import devices_bp
 from app.routes.initialize import init_bp
+from app.routes.spec import spec_bp
 from app.routes.docs import swaggerui_bp
 
 
@@ -36,21 +37,16 @@ def create_app(cfg):
     """
     app = Flask(__name__)
     app.config.from_object(cfg)
+    api_routes = '/api/v1'
 
     # register the route blueprints
-    app.register_blueprint(devices_bp)
-    app.register_blueprint(init_bp)
-    app.register_blueprint(swaggerui_bp)
-    app.register_blueprint(airscan_bp)
+    app.register_blueprint(devices_bp, url_prefix=f"{api_routes}/devices")
+    app.register_blueprint(init_bp, url_prefix=f"{api_routes}/init")
+    app.register_blueprint(swaggerui_bp, url_prefix=f"{api_routes}/docs")
+    app.register_blueprint(spec_bp, url_prefix=f"{api_routes}/spec")
+    app.register_blueprint(airscan_bp, url_prefix=f"{api_routes}/airscan")
 
-    # Add swagger
-    @app.route('/api/spec')
-    def spec():
-        swag = swagger(app)
-        swag['info']['version'] = "0.1"
-        swag['info']['title'] = "Descry"
-        swag['info']['description'] = "Scanning microservice"
-        return jsonify(swag)
+    print(app.url_map)
 
     CORS(app)
 
