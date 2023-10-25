@@ -7,8 +7,8 @@
 #+begin_src yaml :tangle openapi.yml
 openapi: 3.0.0
 info:
-  title: Archivist Descry api
-  description: API for the Descry scanning microservive
+  title: Archivist Descry API
+  description: API for the Descry scanning microservice
   version: 1.0.0
 #+end_src
 
@@ -75,32 +75,33 @@ servers:
 GET /api/v1/docs
 GET /api/v1/specs
 
-GET /api/v1/config
-GET /api/v1/config/initialize
-PUT /api/v1/config/discover_device
-PUT /api/v1/config/open_device
+GET /api/v1/backend
+GET /api/v1/backend/reinitialize
+GET /api/v1/backend/discover
+PUT /api/v1/backend/discover
 
 GET /api/v1/devices
 GET /api/v1/devices/{guid}
 GET /api/v1/devices/{guid}/scan
-GET /api/v1/devices/{guid}/attributes
-GET /api/v1/devices/{guid}/options
-PUT /api/v1/devices/{guid}/options
+PUT /api/v1/devices/{guid}/enable
+PUT /api/v1/devices/{guid}/disable
+GET /api/v1/devices/{guid}/option
+PUT /api/v1/devices/{guid}/option
 
 GET /api/v1/jobs
 GET /api/v1/jobs/{guid}
 
-*** Config
+*** Backend
 #+begin_src yaml :tangle openapi.yml
 paths:
-  /config:
+  /backend:
     get:
-      description: Return available configurations
+      description: Return current Descry backend status and information
       tags:
-        - config
+        - backend
       responses:
         '200':
-          description: Current Descry configuration
+          description: Current Descry status
           schema:
             type: object
         default:
@@ -109,30 +110,58 @@ paths:
             $ref: '#/components/schemas/error'
 #+end_src
 
-**** Refresh Device
-#+begin_src yaml -i :tangle openapi.yml
-  /config/device_refresh:
-    get:
-      description: Return the new list of available devices
+**** Reinitialize
+#+begin_src yaml :tangle openapi.yml
+  /backend/reinitialize:
+    put:
+      description: Reinitialize the scanner backend
       tags:
-        - config
+        - backend
+      response:
+        '200':
+          description: Service reinitialized
+#+end_src
+
+**** Device Discovery
+#+begin_src yaml :tangle openapi.yml
+  /backend/discover_device:
+    get:
+      description: Discover available devices
       responses:
         '200':
-          description: List of available devices
+          description: A list of available scanning devices
+      tags:
+        - backend
+    put:
+      description: Add a device by IP or name
+      parameters:
+        - in: query
+          name: name
+          description: Device name
+          schema:
+            type: string
+        - in: query
+          name: url
+          description: Device Url
+          schema:
+            type: string
+        - in: query
+          name: type
+          description: Type of device
+          schema:
+            type: string
+            enum: ["airscan"]
+      responses:
+        '200':
+          description: New device configuration applied
+        '404':
+          description: Unknown device type
         default:
           description: Unexpected Error
           schema:
             $ref: '#/components/schemas/error'
-#+end_src
-
-**** Add Device
-#+begin_src yaml :tangle openapi.yml
-  /config/add_device:
-    put:
-      description: Add a device by IP or name
       tags:
-        - config
-      responses:
+        - backend
 
 #+end_src
 
@@ -143,7 +172,7 @@ paths:
 #+begin_src yaml :tangle openapi.yml
   /devices:
     get:
-      description: List of configured scanning device resources
+      description: List of available scanning device resources
       tags:
         - devices
 #+end_src
@@ -201,15 +230,16 @@ paths:
           required: true
         - in: query
           name: options
-          type: array
-          items:
-            name: option
-            type: object
-            properties:
-              name:
-                type: string
-              value:
-                type: string
+          schema:
+            type: array
+            items:
+              name: option
+              type: object
+              properties:
+                name:
+                  type: string
+                  value:
+                    type: string
 
       tags:
         - devices
@@ -234,4 +264,30 @@ paths:
 #+end_src
 *** Jobs
 
-*** Admin
+#+begin_src yaml :tangle openapi.yml
+  /jobs:
+    get:
+      description: A list of current jobs
+      responses:
+        '200':
+          description: List of current jobs
+        default:
+          description: Unexpected Error
+      tags:
+        - jobs
+  /jobs/{guid}:
+    get:
+      description: Get a current job resource
+      parameters:
+        - in: path
+          name: guid
+          description: guid of the current job
+      responses:
+        '200':
+          description: Job resource information
+        default:
+          description: Unexpected Error
+      tags:
+        - jobs
+
+#+end_src

@@ -19,7 +19,6 @@
 # }}}
 
 # appfactory # {{{
-import sys
 from flask import Flask
 from flask_cors import CORS
 from app.routes.airscan import airscan_bp
@@ -27,6 +26,7 @@ from app.routes.devices import devices_bp
 from app.routes.initialize import init_bp
 from app.routes.spec import spec_bp
 from app.routes.docs import swaggerui_bp
+from app.routes.backend import backend_bp
 
 
 def create_app(cfg):
@@ -45,6 +45,7 @@ def create_app(cfg):
     app.register_blueprint(swaggerui_bp, url_prefix=f"{api_routes}/docs")
     app.register_blueprint(spec_bp, url_prefix=f"{api_routes}/spec")
     app.register_blueprint(airscan_bp, url_prefix=f"{api_routes}/airscan")
+    app.register_blueprint(backend_bp, url_prefix=f"{api_routes}/backend")
 
     print(app.url_map)
 
