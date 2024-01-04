@@ -67,6 +67,30 @@ def get_devices():
     }, 200
 
 
+@devices_bp.route('/open', methods=['GET'])
+def get_open_devices():
+    """
+    Get list of open devices.
+
+    ---
+    tags:
+      - devices
+    responses:
+      200:
+        description: List of devices
+      500:
+        description: Internal Error
+    """
+    try:
+        return {
+            "open_devices": list(desanity.open_devices())
+        }, 200
+    except Exception as ex:
+        return {
+            'ErrMsg': f"Internal Server Error {ex}"
+        }, 500
+
+
 @devices_bp.route('/open', methods=['POST'])
 def open_device():
     """
@@ -142,6 +166,83 @@ def get_open_device(device_name):
         "options": opts,
         "parameters": params
     }, 200
+
+
+@devices_bp.route('/open/<string:device_name>/option/<string:option_name>',
+                  methods=['GET'])
+def get_device_option(device_name, option_name):
+    """
+    Get a scanning device option.
+
+    ---
+    parameters:
+      - name: device_name
+        id: path
+        description: option of a device
+        required: True
+        type: string
+    response:
+      200:
+        description: the option information
+    """
+    try:
+        if device_name not in desanity.open_devices():
+            raise DesanityUnknownDev
+
+        device = desanity.get_open_device(device_name)
+
+        if option_name not in device.options:
+            raise DesanityUnknownDev
+
+        return {
+            f'{option_name}': device.options[option_name]
+        }, 200
+
+    except DesanityUnknownDev:
+        return {
+            'ErrMsg': f'Unknown scanner device {device_name}'
+        }, 500
+
+
+@devices_bp.route('/open/<string:device_name>/option/<string:option_name>',
+                  methods=['PUT'])
+def set_device_option(device_name, option_name):
+    """
+    Set a scanning device option.
+
+    ---
+    parameters:
+      - name: device_name
+        id: path
+        description: option of a device
+        required: True
+        type: string
+    response:
+      200:
+        description: the option information
+    """
+    try:
+        if device_name not in desanity.open_devices():
+            raise DesanityUnknownDev
+
+        device = desanity.get_open_device(device_name)
+
+        if option_name not in device.options:
+            raise DesanityUnknownDev
+
+        data = request.get_json()
+        value = data['value']
+
+        device.set_option(option_name, value)
+
+        return {
+            f'{option_name}': device.options[option_name]
+        }, 200
+
+    except DesanityUnknownDev:
+        return {
+            'ErrMsg': f'Unknown scanner device {device_name}'
+        }, 500
 
 
 @devices_bp.route('/<string:device_name>/scan', methods=['GET'])

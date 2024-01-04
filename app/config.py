@@ -26,6 +26,7 @@ class AppConfig:  # pylint: disable=too-few-public-methods
     DEBUG = True
     TESTING = True
     ENVIRONMENT = "DEV"
+    AIRSCAN_CONF = "./airscan.conf"
 
 
 class DevConfig(AppConfig):  # pylint: disable=too-few-public-methods
@@ -34,6 +35,7 @@ class DevConfig(AppConfig):  # pylint: disable=too-few-public-methods
     DEBUG = True
     TESTING = True
     ENVIRONMENT = "DEV"
+    AIRSCAN_CONF = "./airscan.conf"
 
 
 class TestConfig(AppConfig):  # pylint: disable=too-few-public-methods
@@ -42,11 +44,22 @@ class TestConfig(AppConfig):  # pylint: disable=too-few-public-methods
     DEBUG = True
     TESTING = True
     ENVIRONMENT = "TESTING"
+    AIRSCAN_CONF = "./airscan.conf"
+
+
+class ProdConfig(AppConfig):  # pylint: disable=too-few-public-methods
+    """Configuration unit and functional testing."""
+
+    DEBUG = False
+    TESTING = False
+    ENVIRONMENT = "PROD"
+    AIRSCAN_CONF = "/etc/sane.d/airscan.conf"
 
 
 Configs = {
     "DEV": DevConfig,
-    "TESTING": TestConfig
+    "TESTING": TestConfig,
+    "PROD": ProdConfig
 }
 
 # }}}

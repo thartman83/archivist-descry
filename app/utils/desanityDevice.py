@@ -77,6 +77,7 @@ class DesanityDevice():
     _max_saved_jobs = 10
     _jobs = []
     _current_job = None
+    _options = {}
 
     def __init__(self, sane_device, max_saved_jobs=10):
         """Initialize a DesanityDevice."""
@@ -111,30 +112,15 @@ class DesanityDevice():
     def options(self):
         """Return the options available for the device."""
         # parse the option tuples
-        options = self._sane_device.get_options()
-        ret = []
+        options = list(self._sane_device.opt.keys())
+
         for opt in options:
-            # parse the constraints option
-            constraints = self._parse_constraints(
-                opt[DevOptions.CONSTRAINTS])
+            if opt == '':
+                continue
 
-            # parse the property name and value
-            prop_name, prop_value = self._parse_name_value(
-                opt[DevOptions.PROP_NAME])
+            self._parse_option(opt)
 
-            ret.append({
-                'propertyName': prop_name,
-                'Name': opt[DevOptions.NAME],
-                'Description': opt[DevOptions.DESCRIPTION],
-                'type': opt[DevOptions.TYPE],
-                'unit': opt[DevOptions.UNIT],
-                'size': opt[DevOptions.SIZE],
-                'cap': opt[DevOptions.CAP],
-                'constraints': constraints,
-                'value': prop_value
-            })
-
-        return ret
+        return self._options
 
     @property
     def jobs(self):
@@ -143,7 +129,7 @@ class DesanityDevice():
 
     def set_option(self, option_name, value):
         """Set a SANE device option."""
-        keys = list(map(lambda opt: opt["propertyName"], self.options))
+        keys = list(self.options)
         if option_name not in keys:
             raise DesanityUnknownOption(f"Option {option_name} not found for"
                                         "device {device_name}")
@@ -207,9 +193,31 @@ class DesanityDevice():
 
         return constraints
 
+    def _parse_option(self, opt_name):
+        """Parse device option."""
+        if opt_name == '':
+            return
+
+        opt = self._sane_device[opt_name]
+
+        if not opt.is_active():
+            return
+
+        self._options[opt_name] = {}
+        self._options[opt_name]['name'] = opt.name
+        self._options[opt_name]['value'] = getattr(self._sane_device,
+                                                   opt_name)
+        self._options[opt_name]['py_name'] = opt.py_name
+        self._options[opt_name]['type'] = opt.type
+        self._options[opt_name]['unit'] = opt.unit
+        self._options[opt_name]['size'] = opt.size
+        self._options[opt_name]['desc'] = opt.desc
+        constraints = self._parse_constraints(opt.constraint)
+        self._options[opt_name]['constraints'] = constraints
+
     def _parse_name_value(self, opt):
         """Parse the property name and value from the option."""
-        if opt is not None:
+        if opt is not None and not opt == "":
             property_name = opt.replace('-', '_')
 
             if self._sane_device[property_name].is_active():

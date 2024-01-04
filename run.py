@@ -24,7 +24,7 @@ import os
 from app import create_app, Configs
 
 if __name__ == "__main__":
-    configType = os.environ.get('configType') or "DEV"
+    configType = os.environ.get('APPCONFIG') or "DEV"
     config = {}
     try:
         config = Configs[configType]()
@@ -32,6 +32,6 @@ if __name__ == "__main__":
         print(f"Unknown configuration type {configType}")
 
     app = create_app(config)
-    app.run()
+    app.run(host='0.0.0.0')
 
 # }}}

@@ -22,6 +22,7 @@
 from flask import Flask, jsonify
 from flask_swagger import swagger
 from flask_cors import CORS
+from app.routes.airscan import airscan_bp
 from app.routes.devices import devices_bp
 from app.routes.initialize import init_bp
 from app.routes.docs import swaggerui_bp
@@ -40,6 +41,7 @@ def create_app(cfg):
     app.register_blueprint(devices_bp)
     app.register_blueprint(init_bp)
     app.register_blueprint(swaggerui_bp)
+    app.register_blueprint(airscan_bp)
 
     # Add swagger
     @app.route('/api/spec')

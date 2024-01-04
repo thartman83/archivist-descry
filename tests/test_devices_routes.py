@@ -145,4 +145,6 @@ def test_get_open_device_unknown(test_client, mocker):
 
     assert resp.status_code == 404
     assert f"Sane device {device_name} not found" in resp.json['ErrMsg']
+
+
 # }}}
