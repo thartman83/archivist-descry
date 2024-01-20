@@ -53,7 +53,9 @@ class ProdConfig(AppConfig):  # pylint: disable=too-few-public-methods
     DEBUG = False
     TESTING = False
     ENVIRONMENT = "PROD"
-    AIRSCAN_CONF = "/etc/sane.d/airscan.conf"
+    CONFIG = {
+        "airscan": "/etc/sane.d/airscan.conf"
+    }
 
 
 Configs = {

@@ -27,12 +27,20 @@ class DesanityException(Exception):
     """Raise when a SANE issue occurs."""
 
 
+class DesanitySaneException(DesanityException):
+    """Sane Error."""
+
+
 class DesanityUnknownDev(DesanityException):
     """Unknown device referenced."""
 
 
 class DesanityDeviceBusy(DesanityException):
     """The SANE device is busy."""
+
+
+class DesanityDeviceNotEnabled(DesanityException):
+    """Desanity Device not enabled."""
 
 
 class DesanityOptionInvalidValue(DesanityException):

@@ -49,9 +49,7 @@ components:
     error:
       type: object
       properties:
-        id:
-          type: integer
-        message:
+        ErrorMessage:
           type: string
 
 servers:
@@ -121,11 +119,40 @@ paths:
       tags:
         - backend
 
+  /backend/device_configurations:
+    get:
+      description: Return the current device descriptions by type
+      tags:
+        - backend
+      parameters:
+        - in: path
+          name: type
+          description: device configuration type
+          schema:
+            type: string
+            enum: ["airscan"]
+      responses:
+        '200':
+          description: Device configurations
+        '404':
+          description: Unknown device configuration
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
+
   /devices:
     get:
       description: List of available scanning device resources
       tags:
         - devices
+      responses:
+        '200':
+          description: List of available scanning devices
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
 
   /devices/{guid}:
     get:
@@ -138,6 +165,57 @@ paths:
           required: true
       tags:
         - devices
+      responses:
+        '200':
+          description: Device information
+        '404':
+          description: Device not found
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
+
+  /devices/{guid}/enable:
+    put:
+      description: Enable a device for scanning
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+      responses:
+        '200':
+          description: Device enabled
+        '404':
+          description: Device not found
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
+
+  /devices/{guid}/disable:
+    put:
+      description: Disable a device from scanning
+      parameters:
+        - in: path
+          name: guid
+          type: string
+          format: uuid
+          required: true
+      tags:
+        - devices
+      responses:
+        '200':
+          description: Device disbaled
+        '404':
+          description: Device not found
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
 
   /devices/{guid}/attributes:
     get:
@@ -162,6 +240,13 @@ paths:
           required: true
       tags:
         - devices
+      responses:
+        '200':
+          description: Device options
+        default:
+          description: Unexpected Error
+          scheam:
+            $ref: '#/components/schemas/error'
     put:
       description: Update device options
       parameters:
@@ -171,20 +256,23 @@ paths:
           format: uuid
           required: true
         - in: query
-          name: options
-          schema:
-            type: array
-            items:
-              name: option
-              type: object
-              properties:
-                name:
-                  type: string
-                  value:
-                    type: string
+          name: option
+          type: string
+          required: true
+        - in: query
+          name: value
+          type: string
+          required: true
 
       tags:
         - devices
+      responses:
+        '200':
+          description: Device Option Set
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/schemas/error'
 
   /devices/{guid}/scan:
     description: List of device attributes
@@ -198,6 +286,17 @@ paths:
           required: true
       tags:
         - devices
+      responses:
+        '202':
+          description: Scanning job created
+        '404':
+          description: Scanning device not found
+        '503':
+          description: Device Busy
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/components/scheams/error'
 
   /jobs:
     get:

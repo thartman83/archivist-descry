@@ -1,5 +1,5 @@
 ###############################################################################
-#  desanity Device.py for the desanity microservice                           #
+#  DesanityDevice.py for the desanity microservice                            #
 #  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
@@ -22,24 +22,15 @@
 from threading import Thread
 from enum import IntEnum
 from datetime import datetime
-from .desanityExceptions import DesanityDeviceBusy, DesanityOptionInvalidValue
+import uuid
+import sane
+from .desanityExceptions import DesanityDeviceBusy, DesanityDeviceNotEnabled
 from .desanityExceptions import DesanityUnknownOption, SaneException
+from .desanityExceptions import DesanitySaneException
+from .desanityJobs import DesanityJob
 # }}}
 
 # desanity device {{{
-
-
-class DevOptions(IntEnum):
-    """Sane device enumeration."""
-
-    PROP_NAME = 1
-    NAME = 2
-    DESCRIPTION = 3
-    TYPE = 4
-    UNIT = 5
-    SIZE = 6
-    CAP = 7
-    CONSTRAINTS = 8
 
 
 class DevParams(IntEnum):
@@ -55,34 +46,69 @@ class DevParams(IntEnum):
 class DevStatus(IntEnum):
     """Sane device statuses."""
 
-    IDLE = 0
-    SCANNING = 1
-    COMPLETED = 2
-    ERROR = 3
-
-
-class JobStatus(IntEnum):
-    """Sane job statuses."""
-
-    STARTED = 0
-    COMPLETED = 1
-    ERROR = 2
+    DISABLED = 0
+    ENABLED = 1
+    SCANNING = 2
+    COMPLETED = 3
+    ERROR = 4
 
 
 class DesanityDevice():
     """Wrapper for a SANE device."""
 
+    _name = None
+    _vendor = None
+    _model = None
+    _device_type = None
+    _guid = None
+    _options = {}
     _sane_device = None
-    _status = DevStatus.IDLE
-    _max_saved_jobs = 10
+    _status = DevStatus.DISABLED
     _jobs = []
     _current_job = None
-    _options = {}
 
-    def __init__(self, sane_device, max_saved_jobs=10):
+    def __init__(self, name, vendor, model, device_type):
         """Initialize a DesanityDevice."""
-        self._sane_device = sane_device
-        self._max_saved_jobs = max_saved_jobs
+        self._guid = str(uuid.uuid4())
+        self._name = name
+        self._vendor = vendor
+        self._model = model
+        self._device_type = device_type
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def vendor(self):
+        """Return the vendor of the device."""
+        return self._vendor
+
+    @property
+    def model(self):
+        """Return the model of the device."""
+        return self._model
+
+    @property
+    def device_type(self):
+        """Return the type of the device."""
+        return self._device_type
+
+    @property
+    def guid(self):
+        """Return the guid of the device."""
+        return self._guid
+
+    @property
+    def status(self):
+        """Return the device status."""
+        return self._status
+
+    @property
+    def enabled(self):
+        """Return whether the device is opened."""
+        return self._sane_device is not None
 
     @property
     def sane_device(self):
@@ -90,14 +116,15 @@ class DesanityDevice():
         return self._sane_device
 
     @property
-    def status(self):
-        """Return the status of the device."""
-        return self._status
-
-    @property
     def parameters(self):
         """Return the SANE device properties."""
-        parameters = self._sane_device.get_parameters()
+        if self._sane_device is None:
+            raise DesanityDeviceNotEnabled()
+
+        try:
+            parameters = self._sane_device.get_parameters()
+        except SaneException as ex:
+            raise DesanitySaneException() from ex
 
         return {
             'format': parameters[DevParams.FORMAT],
@@ -111,6 +138,9 @@ class DesanityDevice():
     @property
     def options(self):
         """Return the options available for the device."""
+        if self._sane_device is None:
+            raise DesanityDeviceNotEnabled()
+
         # parse the option tuples
         options = list(self._sane_device.opt.keys())
 
@@ -127,8 +157,26 @@ class DesanityDevice():
         """Return the list of running and completed jobs on the device."""
         return self._jobs
 
+    def enable(self):
+        """Open the sane device."""
+        try:
+            self._sane_device = sane.open(self.name)
+            self._status = DevStatus.ENABLED
+        except SaneException as ex:
+            raise DesanitySaneException(str(ex)) from ex
+
+    def disable(self):
+        """Close the sane device."""
+        self._sane_device.close()
+        self._options = {}
+        self._status = DevStatus.DISABLED
+        self._sane_device = None
+
     def set_option(self, option_name, value):
         """Set a SANE device option."""
+        if self._sane_device is None:
+            return
+
         keys = list(self.options)
         if option_name not in keys:
             raise DesanityUnknownOption(f"Option {option_name} not found for"
@@ -137,11 +185,14 @@ class DesanityDevice():
         try:
             setattr(self._sane_device, option_name, value)
         except SaneException as ex:
-            raise DesanityOptionInvalidValue() from ex
+            raise DesanitySaneException from ex
 
     def scan(self):
         """Use the SANE device to perform a scan."""
-        if self.status not in (DevStatus.IDLE, DevStatus.COMPLETED):
+        if self._sane_device is None:
+            return None
+
+        if self.status not in (DevStatus.ENABLED, DevStatus.COMPLETED):
             raise DesanityDeviceBusy()
 
         job = self._get_next_job()
@@ -149,6 +200,20 @@ class DesanityDevice():
         Thread(target=self._start_scan, args=(job,)).start()
 
         return job
+
+    def serialize_json(self):
+        """Return the device as a json object."""
+        return {
+                'name': self.name,
+                'vendor': self.vendor,
+                'model': self.model,
+                'device_type': self.device_type,
+                'guid': self.guid,
+                'status': self.status,
+                'parameters': self.parameters,
+                'options': self.options,
+                'enabled': self.enabled
+            }
 
     def _start_scan(self, job):
         """Private method to begin a scan asyncronously."""
@@ -166,8 +231,8 @@ class DesanityDevice():
 
     def _get_next_job(self):
         """Return the next available job number for the device."""
-        if len(self._jobs) == self._max_saved_jobs:
-            self._jobs.pop()
+        # if len(self._jobs) == self._max_saved_jobs:
+        #     self._jobs.pop()
 
         new_job = DesanityJob(int(datetime.timestamp(datetime.now())))
 
@@ -229,66 +294,4 @@ class DesanityDevice():
             value = None
 
         return property_name, value
-
-
-class DesanityJob():
-    """A Scanning job."""
-
-    _job_number = None
-    _images = []
-    _start_date = None
-    _end_date = None
-    _job_status = None
-    _error_str = None
-
-    def __init__(self, job_number):
-        """Initiatlize the Job."""
-        self._job_number = job_number
-        self._start_date = datetime.now()
-        self._job_status = JobStatus.STARTED
-
-    @property
-    def job_number(self):
-        """Return the job number assoicated with the job."""
-        return self._job_number
-
-    @property
-    def images(self):
-        """Return the scanned images associated with the job."""
-        return self._images
-
-    @property
-    def status(self):
-        """Return the job status."""
-        return self._job_status
-
-    @property
-    def start_date(self):
-        """Return the job start date."""
-        return self._start_date
-
-    @property
-    def end_date(self):
-        """Return the job end date."""
-        return self._end_date
-
-    @property
-    def error_str(self):
-        """Return the error message of the job."""
-        return self._error_str
-
-    def add_image(self, image):
-        """Add an image to the job."""
-        self._images.append(image)
-
-    def mark_complete(self):
-        """Mark job as completed."""
-        self._job_status = JobStatus.COMPLETED
-        self._end_date = datetime.now()
-
-    def mark_error(self, error_str):
-        """Mark job as having errored."""
-        self._job_status = JobStatus.ERROR
-        self._end_date = datetime.now()
-        self._error_str = error_str
 # }}}
