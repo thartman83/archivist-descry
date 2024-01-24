@@ -76,6 +76,7 @@ def get_device(guid):
     """
     try:
         dev = get_device_by_guid(guid)
+        print('got dev?')
         return dev.serialize_json(), 200
     except StopIteration:
         return {
@@ -260,6 +261,21 @@ def scan(guid):
         'jobId': job.job_number,
         'job_url': job_url(guid, job.job_number)
     }, 202
+
+
+@devices_bp.route('/<string:guid>/jobs', methods=['GET'])
+def get_job(guid):
+    """
+    """
+    try:
+        dev = get_device_by_guid(guid)
+        return {
+            'jobs': list(map(lambda job: job.guid, dev.jobs))
+        }, 200
+    except:
+        return {
+            'fuck': 'holy shit'
+        }, 500
 
 
 def image2base64str(image, fmt="JPEG"):

@@ -58,10 +58,17 @@ def configure_device():
     """Configure a new Descry device."""
     try:
         req = None if not request.is_json else request.get_json()
+        print(req['type'])
         desanity.add_device_by_url(req['device_name'], req['device_url'],
                                    req['type'])
 
-        return 200
+        return {
+            'device': {
+                'device_name': req['device_name'],
+                'device_url': req['device_url'],
+                'type': req['type']
+            }
+        }, 200
     except KeyError as ex:
         return {
             'ErrorMessage': f'Invalid request: {ex}'

@@ -209,10 +209,6 @@ class DesanityDevice():
                 'model': self.model,
                 'device_type': self.device_type,
                 'guid': self.guid,
-                'status': self.status,
-                'parameters': self.parameters,
-                'options': self.options,
-                'enabled': self.enabled
             }
 
     def _start_scan(self, job):

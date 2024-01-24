@@ -52,4 +52,5 @@ def create_app(cfg):
     CORS(app)
 
     return app
+
 # }}}

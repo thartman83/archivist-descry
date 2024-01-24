@@ -92,12 +92,12 @@ paths:
       description: Add a device by IP or name
       parameters:
         - in: query
-          name: name
+          name: device_name
           description: Device name
           schema:
             type: string
         - in: query
-          name: url
+          name: device_url
           description: Device Url
           schema:
             type: string

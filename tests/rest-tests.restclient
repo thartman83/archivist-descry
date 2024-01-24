@@ -1,17 +1,39 @@
 # -*- restclient -*-
 
 ## Initiatialize descry
-GET http://127.0.0.1:5000/initialize
+PUT http://127.0.0.1:5000/api/v1/backend/reinitialize
 
 ## get airscan configuration
-GET http://127.0.0.1:5000/airscan
+GET http://127.0.0.1:5000/api/v1/devices
+
+## get specific device
+GET http://127.0.0.1:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c
+
+## enable the device
+PUT http://127.0.0.1:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/enable
+
+## scan an image
+GET http://127.0.0.1:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/scan
+
+## get a job
+GET http://127.0.0.1:5000/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/jobs/1705796762
+
+## get options
+GET http://127.0.0.1:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/options
+
+## scan an image
+GET http://127.0.0.1:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/jobs
+
+## discover devices
+GET http://127.0.0.1:5000/api/v1/backend/discover_device
 
 ## add a device
-PUT http://127.0.0.1:5000/airscan/device
+PUT http://127.0.0.1:5000/api/v1/backend/discover_device
 Content-Type: application/json
 {
-  "name": "Brother4 MFC Scanner",
-  "url": "http://172.17.1.28/WebServices/Device, wsd"
+  "device_name": "Brother4 MFC Scanner",
+  "type": "airscan",
+  "device_url": "http://172.17.1.28/WebServices/Device, wsd"
 }
 
 ## add a device
