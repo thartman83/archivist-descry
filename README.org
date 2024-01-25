@@ -413,3 +413,7 @@ paths:
         - jobs
 
 #+end_src
+* TODOs
+** Enable logic is weird
+** Getting options on not enabled device (with valid guid)
+** Option setting is path only

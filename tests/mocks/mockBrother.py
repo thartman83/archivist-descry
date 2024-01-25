@@ -19,7 +19,6 @@
 # }}}
 
 # Libraries {{{
-import time
 from PIL import Image
 # }}}
 
@@ -85,6 +84,10 @@ class MockBrotherOption():
     def is_settable(self):
         """Return true."""
         return True
+
+    def title(self):
+        """ Return title."""
+        return self.title
 
 
 class MockBrotherDev():

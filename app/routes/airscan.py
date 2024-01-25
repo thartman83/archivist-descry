@@ -87,7 +87,8 @@ def add_airscan_device():
 
     conf = configparser.ConfigParser()
     try:
-        with open(current_app.config['AIRSCAN_CONF'], encoding="utf-8") as conf_fp:
+        with open(current_app.config['AIRSCAN_CONF'],
+                  encoding="utf-8") as conf_fp:
             conf.read_file(conf_fp)
     except IOError as err:
         return {

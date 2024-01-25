@@ -1,0 +1,178 @@
+{
+    '':
+    Name:
+    Cur value: 19
+    Index:     0
+    Title:     Number of options
+    Desc:      Read-only option that specifies how many options a specific device supports.
+    Type:      TYPE_INT
+    Unit:      UNIT_NONE
+    Constr:    None
+    active:    yes
+    settable:  no
+ , 'resolution':
+ Name:      resolution
+ Cur value: 300
+ Index:     2
+ Title:     Scan resolution
+ Desc:      Sets the resolution of the scanned image.
+ Type:      TYPE_INT
+ Unit:      UNIT_DPI
+ Constr:    [100, 200, 300]
+ active:    yes
+ settable:  yes
+ , 'mode':
+ Name:      mode
+ Cur value: 'Color'
+ Index:     3
+ Title:     Scan mode
+ Desc:      Selects the scan mode (e.g., lineart, monochrome, or color).
+ Type:      TYPE_STRING
+ Unit:      UNIT_NONE
+ Constr:    ['Color', 'Gray']
+ active:    yes
+ settable:  yes
+ , 'source':
+ Name:      source
+ Cur value: 'Flatbed'
+ Index:     4
+ Title:     Scan source
+ Desc:      Selects the scan source (such as a document-feeder).
+ Type:      TYPE_STRING
+ Unit:      UNIT_NONE
+ Constr:    ['Flatbed', 'ADF']
+ active:    yes
+ settable:  yes
+ , 'tl_x':
+ Name:      tl_x
+ Cur value: 0.0
+ Index:     6
+ Title:     Top-left x
+ Desc:      Top-left x position of scan area.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_MM
+ Constr:    (0.0, 215.89999389648438, 0.0)
+ active:    yes
+ settable:  yes
+ , 'tl_y':
+ Name:      tl_y
+ Cur value: 0.0
+ Index:     7
+ Title:     Top-left y
+ Desc:      Top-left y position of scan area.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_MM
+ Constr:    (0.0, 297.17999267578125, 0.0)
+ active:    yes
+ settable:  yes
+ , 'br_x':
+ Name:      br_x
+ Cur value: 215.89999389648438
+ Index:     8
+ Title:     Bottom-right x
+ Desc:      Bottom-right x position of scan area.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_MM
+ Constr:    (0.0, 215.89999389648438, 0.0)
+ active:    yes
+ settable:  yes
+ , 'br_y':
+ Name:      br_y
+ Cur value: 297.17999267578125
+ Index:     9
+ Title:     Bottom-right y
+ Desc:      Bottom-right y position of scan area.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_MM
+ Constr:    (0.0, 297.17999267578125, 0.0)
+ active:    yes
+ settable:  yes
+ , 'brightness':
+ Name:      brightness
+ Cur value: 0.0
+ Index:     11
+ Title:     Brightness
+ Desc:      Controls the brightness of the acquired image.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_PERCENT
+ Constr:    (-100.0, 100.0, 1.0)
+ active:    yes
+ settable:  yes
+ , 'contrast':
+ Name:      contrast
+ Cur value: 0.0
+ Index:     12
+ Title:     Contrast
+ Desc:      Controls the contrast of the acquired image.
+ Type:      TYPE_FIXED
+ Unit:      UNIT_PERCENT
+ Constr:    (-100.0, 100.0, 1.0)
+ active:    yes
+ settable:  yes
+ , 'shadow':
+ Name:      shadow
+ Cur value: 0.0
+ Index:     13
+ Title:     Shadow
+ Desc:      Selects what radiance level should be considered "black".
+ Type:      TYPE_FIXED
+ Unit:      UNIT_PERCENT
+ Constr:    (0.0, 100.0, 1.0)
+ active:    yes
+ settable:  yes
+ , 'highlight':
+ Name:      highlight
+ Cur value: 100.0
+ Index:     14
+ Title:     Highlight
+ Desc:      Selects what radiance level should be considered "white".
+ Type:      TYPE_FIXED
+ Unit:      UNIT_PERCENT
+ Constr:    (0.0, 100.0, 1.0)
+ active:    yes
+ settable:  yes
+ , 'analog_gamma':
+ Name:      analog_gamma
+ Cur value: 1.0
+ Index:     15
+ Title:     Analog gamma correction
+ Desc:      Analog gamma-correction
+ Type:      TYPE_FIXED
+ Unit:      UNIT_NONE
+ Constr:    (0.0999908447265625, 4.0, 0.0)
+ active:    yes
+ settable:  yes
+ , 'negative':
+ Name:      negative
+ Cur value: 0
+ Index:     16
+ Title:     Negative
+ Desc:      Swap black and white
+ Type:      TYPE_BOOL
+ Unit:      UNIT_NONE
+ Constr:    None
+ active:    yes
+ settable:  yes
+ , 'adf_justification_x':
+ Name:      adf_justification_x
+ Cur value: <not available, inactive option>
+ Index:     17
+ Title:     ADF Width Justification
+ Desc:      ADF width justification (left/right/center)
+ Type:      TYPE_STRING
+ Unit:      UNIT_NONE
+ Constr:    None
+ active:    no
+ settable:  no
+ , 'adf_justification_y':
+ Name:      adf_justification_y
+ Cur value: <not available, inactive option>
+ Index:     18
+ Title:     ADF Height Justification
+ Desc:      ADF height justification (top/bottom/center)
+ Type:      TYPE_STRING
+ Unit:      UNIT_NONE
+ Constr:    None
+ active:    no
+ settable:  no
+}

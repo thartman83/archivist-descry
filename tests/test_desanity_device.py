@@ -19,111 +19,181 @@
 # }}}
 
 # Libraries {{{
-# from unittest import mock
-from app.utils import DesanityDevice, DesanityDeviceBusy, DevStatus
-from app.utils import DesanityOptionInvalidValue
-from app.utils import DesanityUnknownOption, DesanityException
-from .mocks import MockBrotherDev
+from unittest import mock
+from collections import UserDict
+import sane
+from tests.mocks.mockBrother import MockBrotherDev
+from app.utils import DesanityDevice, DevStatus
+from app.utils.desanityExceptions import DesanitySaneException
+from app.utils.desanityExceptions import DesanityDeviceNotEnabled
+
+SaneError = sane._sane.error
 # }}}
 
 # desanityDevice unit tests {{{
+mock_sane_dev_parms = ('color', 1, (1651, 2783), 8, 4953)
+mock_sane_dev_opt_keys = ['None', 'mode', 'resolution', 'source', 'brightness',
+                          'contrast', 'tl_x', 'tl_y', 'br_x', 'br_y']
 
 
-def test_device_options():
+@mock.patch.object(sane, "open")
+def test_enable(mock_sane_open):
     """
-    GIVEN an initialized desanity device object
-    WHEN options is called with an existing device
-    SHOULD return a parsed set of device options
+    GIVEN a DesanityDevice
+    WHEN enable is called
+    SHOULD call sane.open once
+    SHOULD set status to enabled
     """
-    device = DesanityDevice(MockBrotherDev())
 
-    parsed_options = device.options
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
 
-    assert len(parsed_options) == 15
-    assert parsed_options['mode']['name'] == 'mode'
-    assert parsed_options['resolution']['py_name'] == 'resolution'
-    assert parsed_options['source']['type'] == 2
-    assert isinstance(parsed_options['source']['constraints'], list)
-    assert parsed_options['source']['constraints'][0] == 'Flatbed'
-    assert isinstance(parsed_options['br_y']['constraints'], dict)
-    assert parsed_options['br_y']['constraints']['min'] == 0.0
+    mock_sane_open.return_value = "MockSaneDevice"
+    dev.enable()
+
+    assert dev.enabled
+    assert dev.status == DevStatus.ENABLED
+    mock_sane_open.assert_called_once()
 
 
-def test_device_paramaters():
+@mock.patch.object(sane, "open")
+def test_enable_error(mock_sane_open):
     """
-    GIVEN an initialized desanity object
-    GIVEN sane device found
-    WHEN device_parameters is called with an existing device
-    SHOULD return a parsed set of device parameters
+    GIVEN a DesanityDevice
+    WHEN enable is called
+    WHEN sane raises an error
+    SHOULD raise a DesanitySaneException
     """
-    device = DesanityDevice(MockBrotherDev())
 
-    parsed_params = device.parameters
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
 
-    assert parsed_params['format'] == 'color'
-    assert parsed_params['last_frame'] == 1
-    assert parsed_params['pixelPerLine'] == 1651
-    assert parsed_params['lines'] == 2783
-    assert parsed_params['depth'] == 8
-    assert parsed_params['bytes_per_line'] == 4953
-
-
-def test_set_device_option():
-    """
-    GIVEN an initialized desanity object
-    GIVEN sane device found
-    WHEN set_device_parameter is called for an existing device
-    SHOULD set the sane parameter
-    """
-    device = DesanityDevice(MockBrotherDev())
-
-    option_name = "mode"
-    value = "True Gray"
-
+    mock_sane_open.side_effect = SaneError()
+    error_found = False
     try:
-        device.set_option(option_name, value)
-        passed = True
-    except DesanityException:
-        passed = False
+        dev.enable()
+    except DesanitySaneException:
+        error_found = True
 
-    assert passed
+    mock_sane_open.assert_called_once()
+    assert error_found
 
 
-def test_set_device_option_unknown_option():
+@mock.patch.object(sane, "open")
+def test_disable(mock_sane_open):
     """
-    GIVEN an initialized desanity object
-    GIVEN sane device found
-    WHEN set_device_parameter is called for an existing device
-    WHEN the option is not available
-    SHOULD throw a DesanityUnknownOption execption
+    GIVEN a DesanityDevice
+    WHEN disabled is called
+    SHOULD set status to disabled
     """
-    device = DesanityDevice(MockBrotherDev())
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
 
+    mock_sane_dev = mock.Mock()
+    mock_sane_dev_close = mock.Mock()
+    mock_sane_dev.close = mock_sane_dev_close
+    mock_sane_open.return_value = mock_sane_dev
+
+    dev.enable()
+
+    dev.disable()
+    assert dev.enabled is False
+    assert dev.status == DevStatus.DISABLED
+    mock_sane_dev_close.assert_called_once()
+
+
+@mock.patch.object(sane, "open")
+def test_parameters(mock_sane_open):
+    """
+    GIVEN a DesanityDevice
+    WHEN parameters is called
+    SHOULD return the list of paramters in a dictionary
+    """
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
+
+    mock_sane_dev = mock.Mock()
+    mock_sane_dev_get_parameters = mock.Mock(return_value=mock_sane_dev_parms)
+    mock_sane_dev.get_parameters = mock_sane_dev_get_parameters
+    mock_sane_open.return_value = mock_sane_dev
+
+    dev.enable()
+
+    params = dev.parameters
+    mock_sane_dev_get_parameters.assert_called_once()
+    assert params['format'] == 'color'
+    assert params['last_frame'] == 1
+    assert params['pixelPerLine'] == 1651
+    assert params['lines'] == 2783
+    assert params['depth'] == 8
+    assert params['bytes_per_line'] == 4953
+
+
+@mock.patch.object(sane, "open")
+def test_parameters_not_enabled(mock_sane_open):
+    """
+    GIVEN a DesanityDevice
+    WHEN the device is not enabled
+    WHEN parameters is called
+    SHOULD raise a DesanityDeviceNotEnabled error
+    """
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
+
+    mock_sane_dev = mock.Mock()
+    mock_sane_dev_get_parameters = mock.Mock(return_value=mock_sane_dev_parms)
+    mock_sane_dev.get_parameters = mock_sane_dev_get_parameters
+    mock_sane_open.return_value = mock_sane_dev
+
+    error_found = False
     try:
-        device.set_option("magic", "True Gray")
-        passed = False
-    except DesanityUnknownOption:
-        passed = True
+        dev.parameters
+    except DesanityDeviceNotEnabled:
+        error_found = True
 
-    assert passed
+    assert error_found
 
 
-def test_device_busy():
+@mock.patch.object(sane, "open")
+def test_parameters_sane_error(mock_sane_open):
     """
-    GIVEN an initiatlized desanity device object
-    WHEN the device is currently scanning
-    SHOULD raise a DesanityDeviceBusy exception
+    GIVEN a DesanityDevice
+    WHEN the device is enabled
+    WHEN parameters is called
+    WHEN sane raises an error
+    SHOULD raise a SaneException error
     """
-    assert True
-#    passed = False
-#     try:
-#         device = DesanityDevice(MockBrotherDev())
-#         assert device.status == DevStatus.IDLE
-#         device.scan()
-#         assert device.status == DevStatus.SCANNING
-#         device.scan()
-#     except DesanityDeviceBusy:
-#         passed = True
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
 
-#     assert passed
-# }}}
+    mock_sane_dev = mock.Mock()
+    mock_sane_dev_get_parameters = mock.Mock(side_effect=SaneError())
+    mock_sane_dev.get_parameters = mock_sane_dev_get_parameters
+    mock_sane_open.return_value = mock_sane_dev
+
+    dev.enable()
+
+    error_found = False
+    try:
+        dev.parameters
+    except DesanitySaneException:
+        error_found = True
+
+    assert error_found
+
+
+@mock.patch.object(sane, "open")
+def test_get_options(mock_sane_open):
+    """
+    GIVEN a DesanityDevice
+    WHEN get_options is called
+    SHOULD return a json dictionary of available options
+    """
+    dev = DesanityDevice("aScanner", "ACME Corp", "B", "ABCDEF")
+
+    mock_sane_dev = MockBrotherDev()
+    mock_sane_open.return_value = mock_sane_dev
+
+    dev.enable()
+    options = dev.options
+
+    assert len(options.keys()) == 15
+    assert dev.option
+
+# get options
+# set option
+# scan
