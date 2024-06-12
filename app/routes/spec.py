@@ -1,6 +1,6 @@
 ###############################################################################
-#  desanityExceptions.py for archivist-descry microservice                    #
-#  Copyright (c) 2023 Tom Hartman (thomas.lees.hartman@gmail.com)             #
+#  spec.py for archivist card catalog microservice                            #
+#  Copyright (c) 2022 Tom Hartman (thomas.lees.hartman@gmail.com)             #
 #                                                                             #
 #  This program is free software; you can redistribute it and/or              #
 #  modify it under the terms of the GNU General Public License                #
@@ -14,43 +14,22 @@
 #  GNU General Public License for more details.                               #
 ###############################################################################
 
-# Commentary {{{
-"""Exceptions for Desanity classes."""
+# Description {{{
+"""OpenAPI specification."""
 # }}}
 
-# Desanity Exceptions {{{
-import sane
-SaneException = sane._sane.error
+# Spec routes {{{
+import yaml
+from flask import Blueprint
+
+spec_bp = Blueprint('spec', __name__, url_prefix='/spec')
 
 
-class DesanityException(Exception):
-    """Raise when a SANE issue occurs."""
+@spec_bp.route('', methods=['GET'])
+def get_spec():
+    """Get the microservice speification."""
+    with open("openapi.yml", "r", encoding='utf-8') as yaml_in:
+        yaml_def = yaml.safe_load(yaml_in)
+        return yaml_def, 200
 
-
-class DesanitySaneException(DesanityException):
-    """Sane Error."""
-
-
-class DesanityUnknownDev(DesanityException):
-    """Unknown device referenced."""
-
-
-class DesanityDeviceBusy(DesanityException):
-    """The SANE device is busy."""
-
-
-class DesanityDeviceNotEnabled(DesanityException):
-    """Desanity Device not enabled."""
-
-
-class DesanityOptionInvalidValue(DesanityException):
-    """Invalid value for SANE device option."""
-
-
-class DesanityOptionUnsettable(DesanityException):
-    """SANE option not settable."""
-
-
-class DesanityUnknownOption(DesanityException):
-    """Option does not exist for sane device."""
 # }}}

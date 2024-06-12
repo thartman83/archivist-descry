@@ -22,15 +22,17 @@
 from .desanity import desanity
 from .desanityDevice import DesanityDevice
 from .desanityExceptions import DesanityUnknownDev, DesanityException
-from .desanityExceptions import DesanityDeviceBusy
+from .desanityExceptions import DesanityDeviceBusy, DesanitySaneException
 from .desanityExceptions import DesanityUnknownOption
 from .desanityExceptions import DesanityOptionInvalidValue
 from .desanityExceptions import DesanityOptionUnsettable
 from .desanityExceptions import SaneException
-from .desanityDevice import DevStatus, JobStatus
+from .desanityDevice import DevStatus, DevParams
+from .desanityJobs import JobStatus
 
 __all__ = ['desanity', 'DesanityUnknownDev', 'DesanityException',
            "DesanityDevice", "DesanityDeviceBusy", "DevStatus",
            "DesanityUnknownOption", "DesanityOptionInvalidValue",
-           "DesanityOptionUnsettable", "SaneException", "JobStatus"]
+           "DesanityOptionUnsettable", "SaneException", "JobStatus",
+           "DevParams", "DesanitySaneException"]
 # }}}

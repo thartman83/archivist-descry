@@ -18,11 +18,11 @@
 """Swagger documentation route."""
 # }}}
 
-# appfactory # {{{
+# Docs routes # {{{
 from flask_swagger_ui import get_swaggerui_blueprint
 
-SWAGGER_URL = '/api/docs'
-API_URL = '/api/spec'
+SWAGGER_URL = '/api/v1/docs'
+API_URL = '/api/v1/spec'
 
 # Call factory function to create our blueprint
 swaggerui_bp = get_swaggerui_blueprint(

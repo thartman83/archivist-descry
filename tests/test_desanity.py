@@ -18,119 +18,147 @@
 """Unit tests for the desanity class."""
 # }}}
 from unittest import mock
-import random
+# import random
 import sane
-from app.utils import desanity, DesanityUnknownDev
-from .config import sane_devices
+from app.utils import DesanityDevice
+from app.utils.desanityExceptions import DesanitySaneException
+from app.utils.desanityExceptions import DesanityUnknownDev
+SaneError = sane._sane.error
+# from app.utils import desanity, DesanityUnknownDev
+# from .config import sane_devices
+
+mock_sane_devices = [('brother4:net1;dev0', 'Brother', '*MFC-L2700DW',
+                      'BROTHER_MFC-L2700DW_series'),
+                     ('v4l:/dev/video0', 'Noname',
+                      'Integrated Camera: Integrated C', 'virtual device'),
+                     ('airscan:w1:Brother MFC-L2700DW series', 'WSD',
+                      'Brother MFC-L2700DW series', 'ip=172.17.1.28')]
 
 
-@mock.patch.object(sane, "get_devices")
-def test_get_devices(mock_sane):
+@mock.patch.object(sane, "init")
+@mock.patch.object(sane, "exit")
+def test_initialize(mock_sane_exit, mock_sane_init):
     """
-    GIVEN an initialized desanity Object
-    WHEN devices is called
-    SHOULD see that sane.get_devices is called
+    GIVEN a desanity Object
+    WHEN initialize is called
+    SHOULD see that self._delete_devices() is called
+    SHOULD see that sane.exit() is called
+    SHOULD see that sane.init() is called
+    SHOULD return sane version.
     """
+    from app.utils import desanity
+
+    sane_version = "1.00"
+    mock_sane_init.return_value = sane_version
+
     desanity.initialize()
 
-    mock_sane.return_value = [sane_devices["brother"]]
+    mock_sane_init.assert_called_once()
+    mock_sane_exit.assert_called_once()
+    assert isinstance(desanity.sane_version, str)
+    assert desanity.sane_version == sane_version
 
-    devices = desanity.available_devices
 
-    assert "brother4:net1;dev0" in devices
-
-
-@mock.patch.object(sane, "get_devices")
-@mock.patch.object(desanity, "refresh_devices", wraps=desanity.refresh_devices)
-def test_refresh_devices(mock_refresh_devices, mock_sane):
+@mock.patch.object(sane, "init")
+def test_initialize_bad_init(mock_sane_init):
     """
-    GIVEN an initialized desanity object
-    WHEN devices is called
-    SHOULD see that refresh_devices is called once
-    SHOULD see that sane.get_devices is called once
+    GIVEN a desanity object
+    WHEN initialize is called
+    WHEN sane raises an exception
+    SHOULD see that a DesanitySaneException is raised.
     """
-    desanity.initialize()
-    mock_sane.return_value = [sane_devices["brother"]]
 
-    devices = desanity.available_devices
+    from app.utils import desanity
 
-    assert "brother4:net1;dev0" in devices
-    mock_sane.assert_called_once()
-    mock_refresh_devices.assert_called_once()
-
-
-@mock.patch.object(sane, "get_devices")
-@mock.patch.object(desanity, "refresh_devices", wraps=desanity.refresh_devices)
-def test_get_devices_multiple(mock_refresh_devices, mock_sane):
-    """
-    GIVEN an initialized desanity object
-    WHEN devices is called multiple times
-    SHOULD see that refresh_devices is called once
-    SHOULD see that sane.get_devices is called once
-    """
-    desanity.initialize()
-    mock_sane.return_value = [sane_devices["brother"]]
-
-    for _ in range(2, random.randint(3, 7)):
-        devices = desanity.available_devices
-
-    assert "brother4:net1;dev0" in devices
-    mock_refresh_devices.assert_called_once()
-
-
-@mock.patch.object(sane, "get_devices")
-def test_open_device_not_found(mock_sane):
-    """
-    GIVEN an initialized desanity object
-    GIVEN sane devices found
-    WHEN open_device is called with a non-existant device
-    SHOULD throw an Desanity Exception
-    """
-    desanity.initialize()
-    mock_sane.return_value = [sane_devices["brother"]]
-
+    mock_sane_init.side_effect = SaneError('init error')
     error_found = False
     try:
-        desanity.open_device("epson:dev12")
-    except DesanityUnknownDev:
+        desanity.initialize()
+    except DesanitySaneException:
         error_found = True
 
     assert error_found
 
 
 @mock.patch.object(sane, "get_devices")
-@mock.patch.object(sane, "open")
-def test_open_device(mock_open, mock_devices):
+def test_refresh_devices(mock_sane_get_devices):
     """
     GIVEN an initialized desanity object
-    GIVEN sane devices found
-    WHEN open_device is called with an existing device
-    SHOULD add an entry into the open device property
+    WHEN get_devices is called
+    SHOULD see delete_devices is called
+    SHOULD see that devices property is set with the appropriate objects
     """
-    desanity.initialize()
-    mock_devices.return_value = [sane_devices["brother"]]
-    device_name = "brother4:net1;dev0"
-    mock_open.return_value = device_name
+    mock_sane_get_devices.return_value = mock_sane_devices
 
-    desanity.refresh_devices()
-    desanity.open_device(device_name)
-    assert "brother4_net1_dev0" in desanity.open_devices()
+    from app.utils import desanity
+    desanity._delete_devices = mock.Mock()
+
+    devs = desanity.refresh_devices()
+    desanity._delete_devices.assert_called_once()
+    assert isinstance(devs, list)
+    assert len(devs) == 3
+    assert all(map(lambda it: isinstance(it, DesanityDevice), devs))
 
 
 @mock.patch.object(sane, "get_devices")
-@mock.patch.object(sane, "open")
-def test_open_device_common_name(mock_open, mock_devices):
+def test_refresh_devices_sane_error(mock_sane_get_devices):
     """
     GIVEN an initialized desanity object
-    GIVEN sane devices found
-    WHEN open_device is called with an existing device
-    SHOULD add an entry into the open device property
+    WHEN get_devices raises an exception
+    SHOULD raise a DesanitySaneException
     """
-    desanity.initialize()
-    mock_devices.return_value = [sane_devices["brother"]]
-    device_name = "brother4:net1;dev0"
-    mock_open.return_value = device_name
+    mock_sane_get_devices.side_effect = SaneError('get_device error')
 
+    from app.utils import desanity
+
+    desanity.initialize()
+    error_found = False
+    try:
+        desanity.refresh_devices()
+    except DesanitySaneException:
+        error_found = True
+
+    assert error_found
+
+
+@mock.patch.object(sane, "get_devices")
+def test_get_device(mock_sane_get_devices):
+    """
+    GIVEN an initialized desanity object
+    WHEN get_device is called
+    WHEN device exists
+    SHOULD return a DesanityDevice
+    """
+    mock_sane_get_devices.return_value = mock_sane_devices
+
+    from app.utils import desanity
+
+    desanity.initialize()
     desanity.refresh_devices()
-    desanity.open_device(device_name, "brother4")
-    assert "brother4" in desanity.open_devices()
+
+    dev = desanity.get_device("brother4:net1;dev0")
+    assert isinstance(dev, DesanityDevice)
+
+
+@mock.patch.object(sane, "get_devices")
+def test_refresh_unknown_device(mock_sane_get_devices):
+    """
+    GIVEN an initialized desanity object
+    WHEN get_device is called
+    WHEN device does not exist
+    SHOULD raise a DesanityUnknownDev
+    """
+    mock_sane_get_devices.return_value = mock_sane_devices
+
+    from app.utils import desanity
+
+    desanity.initialize()
+    desanity.refresh_devices()
+    error_found = False
+
+    try:
+        desanity.get_device("SomeUnknownDevice")
+    except DesanityUnknownDev:
+        error_found = True
+
+    assert error_found

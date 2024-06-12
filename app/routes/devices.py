@@ -23,10 +23,10 @@ import base64
 from io import BytesIO
 from flask import Blueprint, request
 from app.utils import desanity, DesanityUnknownDev, DesanityException
-from app.utils import JobStatus, DesanityDeviceBusy
+from app.utils import DesanityDeviceBusy
 # }}}
 
-devices_bp = Blueprint('devices', __name__, url_prefix='/devices')
+devices_bp = Blueprint('devices', __name__)
 
 
 @devices_bp.route('', methods=['GET'])
@@ -43,19 +43,12 @@ def get_devices():
       500:
         description: Error occured while getting a list of available devices
     """
-    req = None if not request.is_json else request.get_json()
-    no_cache = False
-
-    if req is not None and req.has_key('no_cache'):
-        no_cache = bool(req['no_cache'])
-
     # try to get the devices throw a internal server error if it fails
     try:
-        if no_cache:
-            devices = desanity.available_devices
-        else:
-            devices = desanity.refresh_devices()
-
+        devices = list(map(lambda dev: {
+            'name': dev.name,
+            'guid': dev.guid
+        }, desanity.devices))
     except DesanityException as ex:
         return {
             'ErrMsg': f"An error occured while getting devices: {ex}"
@@ -67,8 +60,8 @@ def get_devices():
     }, 200
 
 
-@devices_bp.route('/open', methods=['GET'])
-def get_open_devices():
+@devices_bp.route('/<string:guid>', methods=['GET'])
+def get_device(guid):
     """
     Get list of open devices.
 
@@ -82,17 +75,21 @@ def get_open_devices():
         description: Internal Error
     """
     try:
+        dev = get_device_by_guid(guid)
+        print('got dev?')
+        return dev.serialize_json(), 200
+    except StopIteration:
         return {
-            "open_devices": list(desanity.open_devices())
-        }, 200
-    except Exception as ex:
+            'ErrorMsg': f'Unabled to find resource {guid}'
+        }, 404
+    except DesanityException as ex:
         return {
-            'ErrMsg': f"Internal Server Error {ex}"
+            'ErrorMsg': f"Internal Server Error {ex}"
         }, 500
 
 
-@devices_bp.route('/open', methods=['POST'])
-def open_device():
+@devices_bp.route('/<string:guid>/enable', methods=['PUT'])
+def open_device(guid):
     """
     Open a SANE device within Descry.
 
@@ -106,71 +103,58 @@ def open_device():
         required: true
         type: string
     responses:
-      201:
+      200:
          description: Device is opened
       404:
          description: Device not found
     """
     try:
-        data = request.get_json()
-        device_name = data['device_name']
-
-        device_id = desanity.open_device(device_name)
-    except DesanityUnknownDev:
+        dev = get_device_by_guid(guid)
+        dev.enable()
+    except StopIteration:
         return {
-            'ErrMsg': f'Sane device {device_name} not found'
+            'ErrMsg': f'Sane device {guid} not found'
         }, 404
+    except DesanityException as ex:
+        return {
+            'ErrMsg': f'Internal Server Error {str(ex)}'
+        }, 500
 
     return {
-        'device_id': device_id
+        'device': guid,
+        'status': 'enabled'
     }, 201
 
 
-@devices_bp.route('/open/<string:device_name>', methods=['GET'])
-def get_open_device(device_name):
+@devices_bp.route('/<string:guid>/disable', methods=['PUT'])
+def close_device(guid):
     """
-    Get a scanning device information.
+    Close a SANE device within Descry.
 
     ---
     tags:
       - devices
-    parameters:
-      - name: device_name
-        in: path
-        description: Name of device to open
-        required: true
-        type: string
-    responses:
-      200:
-         description: Device description, options and parameters
-      404:
-         description: Device not found
-
     """
     try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-
-        params = device.parameters
-        opts = device.options
-
-    except DesanityUnknownDev:
+        dev = get_device_by_guid(guid)
+        dev.disable()
+    except StopIteration:
         return {
-            'ErrMsg': f'Sane device {device_name} not found'
+            'ErrMsg': f'Sane device {guid} not found'
         }, 404
+    except DesanityUnknownDev as ex:
+        return {
+            'ErrMsg': f'Internal Server Error {str(ex)}'
+        }, 500
 
     return {
-        "device_name": device_name,
-        "options": opts,
-        "parameters": params
-    }, 200
+        'device': guid,
+        'status': 'disabled'
+    }
 
 
-@devices_bp.route('/open/<string:device_name>/option/<string:option_name>',
-                  methods=['GET'])
-def get_device_option(device_name, option_name):
+@devices_bp.route('/<string:guid>/options', methods=['GET'])
+def get_device_option(guid):
     """
     Get a scanning device option.
 
@@ -186,27 +170,19 @@ def get_device_option(device_name, option_name):
         description: the option information
     """
     try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-
-        if option_name not in device.options:
-            raise DesanityUnknownDev
-
+        dev = get_device_by_guid(guid)
         return {
-            f'{option_name}': device.options[option_name]
+            'device': guid,
+            'options': dev.options
         }, 200
-
-    except DesanityUnknownDev:
+    except StopIteration:
         return {
-            'ErrMsg': f'Unknown scanner device {device_name}'
-        }, 500
+            'ErrMsg': f'Sane device {guid} not found'
+        }, 404
 
 
-@devices_bp.route('/open/<string:device_name>/option/<string:option_name>',
-                  methods=['PUT'])
-def set_device_option(device_name, option_name):
+@devices_bp.route('/<string:guid>/options', methods=['PUT'])
+def set_device_option(guid):
     """
     Set a scanning device option.
 
@@ -222,31 +198,33 @@ def set_device_option(device_name, option_name):
         description: the option information
     """
     try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
+        dev = get_device_by_guid(guid)
+        req = request.args
 
-        device = desanity.get_open_device(device_name)
+        if req is None or 'option' not in req or 'value' not in req:
+            return {
+                'ErrMsg': 'Invalid request'
+            }, 400
 
-        if option_name not in device.options:
-            raise DesanityUnknownDev
+        opt = req['option']
+        value = req['value']
 
-        data = request.get_json()
-        value = data['value']
-
-        device.set_option(option_name, value)
-
+        dev.set_option(opt, value)
         return {
-            f'{option_name}': device.options[option_name]
+            'status': 'updated'
         }, 200
-
+    except StopIteration:
+        return {
+            'ErrMsg': f'Sane device {guid} not found'
+        }, 404
     except DesanityUnknownDev:
         return {
-            'ErrMsg': f'Unknown scanner device {device_name}'
+            'ErrMsg': f'Unknown scanner device {guid}'
         }, 500
 
 
-@devices_bp.route('/<string:device_name>/scan', methods=['GET'])
-def scan(device_name):
+@devices_bp.route('/<string:guid>/scan', methods=['GET'])
+def scan(guid):
     """
     Scan a document using device_name.
 
@@ -268,205 +246,36 @@ def scan(device_name):
         description: Device is busy
     """
     try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-        job = device.scan()
-    except DesanityUnknownDev:
+        dev = get_device_by_guid(guid)
+        job = dev.scan()
+    except StopIteration:
         return {
-            'ErrMsg': f'Sane device {device_name} not found or not opened'
+            'ErrMsg': f'Sane device {guid} not found'
         }, 404
     except DesanityDeviceBusy:
         return {
-            "ErrMsg": f"Sane device {device_name} is busy"
+            "ErrMsg": f"Sane device {guid} is busy"
         }, 503
 
     return {
         'jobId': job.job_number,
-        'job_url': job_url(device_name, job.job_number)
+        'job_url': job_url(guid, job.job_number)
     }, 202
 
 
-@devices_bp.route('<string:device_name>/jobs', methods=['GET'])
-def get_jobs(device_name):
+@devices_bp.route('/<string:guid>/jobs', methods=['GET'])
+def get_job(guid):
     """
-    Get list running or completed job for the given device.
-
-    ---
-    tags:
-      - jobs
-    parameters:
-    - name: device_name
-      in: path
-      description: Device common name
-      required: true
-      type: string
-    response:
-      200:
-        description: List of jobs, including job id, status, and start,end date
-      404:
-        description: Device not found
     """
     try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-
-        jobs_info = list(map(lambda job: {
-            "id": job.job_number,
-            "status": job.status,
-            "pageCount": len(job.images),
-            "startDate": job.start_date,
-            "endDate": job.end_date}, device.jobs))
-
-    except DesanityUnknownDev:
+        dev = get_device_by_guid(guid)
         return {
-            'ErrMsg': f'Sane device {device_name} not found'
-        }, 404
-
-    return jobs_info, 200
-
-
-@devices_bp.route('<string:device_name>/jobs/<int:job_number>',
-                  methods=['GET'])
-def get_job(device_name, job_number):
-    """
-    Get a running or completed job on a given device by job number.
-
-    ---
-    tags:
-      - jobs
-    parameters:
-    - name: device_name
-      in: path
-      description: Device common name
-      required: true
-      type: string
-    - name: job_number
-      in: path
-      description: Job number
-      required: true
-      type: integer
-    response:
-      200:
-        description: Job information, including status and images
-      404:
-        description: Job or device not found
-    """
-    try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-
-        jobs = device.jobs
-        if job_number not in list(map(lambda job: job.job_number, jobs)):
-            return {
-                'ErrMsg': f'Job {job_number} was not found'
-            }
-
-        job = next(job for job in jobs if job.job_number == job_number)
-
-    except DesanityUnknownDev:
+            'jobs': list(map(lambda job: job.guid, dev.jobs))
+        }, 200
+    except:
         return {
-            'ErrMsg': f'Sane device {device_name} not found'
-        }, 404
-    except StopIteration:
-        return {
-            'ErrMsg': f'Job {job_number} was not found'
-        }
-
-    ret = {
-        "id": job_number,
-        "pageCount": len(job.images),
-        "pages": list(map(image2base64str, job.images)),
-        "status": job.status,
-        "startDate": job.start_date
-        }
-
-    if job.status == JobStatus.ERROR:
-        ret["errorMessage"] = job.error_str
-
-    if job.status == JobStatus.COMPLETED:
-        ret["endDate"] = job.end_date
-
-    return ret, 200
-
-
-# pylint: disable=line-too-long
-@devices_bp.route('<string:device_name>/jobs/<int:job_number>/page/<int:page_number>', methods=['GET']) # noqa
-def get_page(device_name, job_number, page_number):
-    """
-    Return a scanned page from a scan job.
-
-    ---
-    tags:
-      - jobs
-    parameters:
-    - name: device_name
-      in: path
-      description: Device common name
-      required: true
-      type: string
-    - name: job_number
-      in: path
-      description: Job number
-      required: true
-      type: integer
-    - name: page_number
-      in: path
-      description: Page number (1s indexed)
-      required: true
-      type: integer
-    - name: format
-      in: body
-      description: Image format of the page
-      required: false
-      type: string
-      default: JPEG
-    response:
-      200:
-        description: Job information, including status and images
-      404:
-        description: Job or device not found
-    """
-    try:
-        if device_name not in desanity.open_devices():
-            raise DesanityUnknownDev
-
-        device = desanity.get_open_device(device_name)
-
-        jobs = device.jobs
-        if job_number not in list(map(lambda job: job.job_number, jobs)):
-            return {
-                'ErrMsg': f'Job {job_number} was not found'
-            }
-
-        job = next(job for job in jobs if job.job_number == job_number)
-
-        if page_number > len(job.images) or page_number < 1:
-            return {
-                'ErrMsg': f'Page number {page_number} does not exist'
-            }, 404
-
-    except DesanityUnknownDev:
-        return {
-            'ErrMsg': f'Sane device {device_name} not found'
-        }, 404
-    except StopIteration:
-        return {
-            'ErrMsg': f'Job {job_number} was not found'
-        }
-
-    ret = {
-        "id": "job",
-        "pageNumber": page_number,
-        "page": image2base64str(job.images[page_number-1])
-        }
-
-    return ret, 200
+            'fuck': 'holy shit'
+        }, 500
 
 
 def image2base64str(image, fmt="JPEG"):
@@ -479,3 +288,8 @@ def image2base64str(image, fmt="JPEG"):
 def job_url(device_name, job_number):
     """Return a job url."""
     return f"{request.url_root}devices/{device_name}/jobs/{job_number}"
+
+
+def get_device_by_guid(guid):
+    """Return a DesanityDevice by guid."""
+    return next(dev for dev in desanity.devices if dev.guid == guid)

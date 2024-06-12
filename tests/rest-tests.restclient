@@ -1,57 +1,75 @@
 # -*- restclient -*-
 
 ## Initiatialize descry
-GET http://127.0.0.1:5000/initialize
+PUT http://172.17.1.64:5000/api/v1/backend/reinitialize
 
 ## get airscan configuration
-GET http://127.0.0.1:5000/airscan
+GET http://172.17.1.64:5000/api/v1/devices
+
+## get specific device
+GET http://172.17.1.64:5000/api/v1/devices/611165d8-6294-4415-bc8e-67c9db792e25/options
+
+## enable the device
+PUT http://172.17.1.64:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/enable
+
+## scan an image
+GET http://172.17.1.64:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/scan
+
+## get a job
+GET http://172.17.1.64:5000/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/jobs/1705796762
+
+## get options
+GET http://172.17.1.64:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/options
+
+## scan an image
+GET http://172.17.1.64:5000/api/v1/devices/fcd01adf-547a-40b2-9ea6-21fb95e92d2c/jobs
+
+## discover devices
+GET http://172.17.1.64:5000/api/v1/backend/discover_device
 
 ## add a device
-PUT http://127.0.0.1:5000/airscan/device
+PUT http://172.17.1.64:5000/api/v1/backend/discover_device
 Content-Type: application/json
 {
-  "name": "Brother4 MFC Scanner",
-  "url": "http://172.17.1.28/WebServices/Device, wsd"
+  "device_name": "Brother4 MFC Scanner",
+  "type": "airscan",
+  "device_url": "http://172.17.1.28/WebServices/Device, wsd"
 }
 
 ## add a device
-PUT http://127.0.0.1:5000/airscan/device
+PUT http://172.17.1.64:5000/airscan/device
 Content-Type: application/json
 {
   "name": "testing"
 }
 
 ## get the list of devices
-GET http://127.0.0.1:5000/devices
+GET http://172.17.1.64:5000/devices
 
 ## set the current device
-POST http://127.0.0.1:5000/devices/open
+POST http://172.17.1.64:5000/devices/open
 Content-Type: application/json
 {
   "device_name": "airscan:w1:Brother MFC-L2700DW series"
 }
 
 ## Get open devices
-GET http://127.0.0.1:5000/devices/open
+GET http://172.17.1.64:5000/devices/open
 
 ## get open devices
-GET http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series
+GET http://172.17.1.64:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series
 
 ## Get the device information
-GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/scan
+GET http://172.17.1.64:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/scan
 
 ## Get the list of jobs for the scanner
-GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs
+GET http://172.17.1.64:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs
 
 ## Get Specific job
-GET http://127.0.0.1:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs/1697168688
+GET http://172.17.1.64:5000/devices/airscan_w1_Brother_MFC-L2700DW_series/jobs/1697168688
 
 ## Get source
-GET http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series/option/source
+GET http://172.17.1.64:5000/api/v1/devices/611165d8-6294-4415-bc8e-67c9db792e25/options
 
 ## Set source to flatbed
-PUT http://127.0.0.1:5000/devices/open/airscan_w1_Brother_MFC-L2700DW_series/option/source
-Content-Type: application/json
-{
-  "value": "ADF"
-}
+PUT http://172.17.1.64:5000/api/v1/devices/611165d8-6294-4415-bc8e-67c9db792e25/options?option=source&value=ADF
